@@ -10,11 +10,7 @@ import {
   ChevronDown, 
   User, 
   Globe, 
-  Search,
-  BookOpen,
-  Users,
-  Award,
-  Bell
+  Search
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -79,7 +75,7 @@ export function Navbar() {
             <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg group-hover:rotate-12 transition-transform duration-500">
               <Globe className="text-white" size={24} />
             </div>
-            <div className="flex flex-col">
+            <div className="flex flex-col text-left">
               <span className="font-bold text-white tracking-tight text-lg leading-none">臺灣 EFT 治療學會</span>
               <span className="text-[10px] text-primary font-bold tracking-widest uppercase">Asia EFT Center</span>
             </div>
@@ -106,7 +102,6 @@ export function Navbar() {
                   {item.submenu && <ChevronDown size={14} className="opacity-50" />}
                 </Link>
 
-                {/* Submenu */}
                 <AnimatePresence>
                   {item.submenu && activeSubmenu === item.name && (
                     <motion.div
@@ -119,7 +114,7 @@ export function Navbar() {
                         <Link
                           key={sub.name}
                           href={sub.href}
-                          className="block px-4 py-2 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-xl transition-all"
+                          className="block px-4 py-2 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-xl transition-all text-left"
                         >
                           {sub.name}
                         </Link>
@@ -148,7 +143,6 @@ export function Navbar() {
             </Link>
           </div>
 
-          {/* Mobile Toggle */}
           <button 
             className="lg:hidden text-white p-2"
             onClick={() => setIsOpen(!isOpen)}
@@ -158,7 +152,6 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -169,7 +162,7 @@ export function Navbar() {
           >
             <div className="flex flex-col gap-6">
               {navItems.map((item) => (
-                <div key={item.name} className="flex flex-col gap-3">
+                <div key={item.name} className="flex flex-col gap-3 text-left">
                   <Link 
                     href={item.href}
                     className="text-xl font-bold text-white hover:text-accent transition-colors"

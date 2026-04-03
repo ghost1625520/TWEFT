@@ -10,14 +10,12 @@ export default function Home() {
     <div className="flex flex-col">
       {/* Hero Section */}
       <section className="relative min-h-[95vh] flex items-center overflow-hidden bg-dark">
-        {/* Abstract Background Elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-[10%] -left-[10%] w-[60%] h-[60%] rounded-full bg-primary/20 blur-[120px] animate-pulse" />
           <div className="absolute top-[20%] -right-[10%] w-[50%] h-[50%] rounded-full bg-secondary/10 blur-[100px]" />
           <div className="absolute -bottom-[10%] left-[20%] w-[40%] h-[40%] rounded-full bg-accent/5 blur-[80px]" />
         </div>
 
-        {/* Grid pattern */}
         <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
 
         <div className="relative max-w-7xl mx-auto px-6 lg:px-8 w-full pt-20">
@@ -62,7 +60,6 @@ export default function Home() {
                 </Link>
               </div>
 
-              {/* Stats Mini Grid */}
               <div className="grid grid-cols-3 gap-8 mt-16 pt-12 border-t border-white/10">
                 <div>
                   <div className="text-2xl font-bold text-white mb-1">500+</div>
@@ -79,7 +76,6 @@ export default function Home() {
               </div>
             </motion.div>
 
-            {/* Visual Element */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -99,7 +95,6 @@ export default function Home() {
                 </div>
               </div>
               
-              {/* Floating Cards */}
               <motion.div 
                 animate={{ y: [0, -20, 0] }}
                 transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
@@ -132,7 +127,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Quick Access Grid */}
       <section className="py-24 bg-white relative">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -157,13 +151,12 @@ export default function Home() {
           </div>
         </div>
       </section>
-      {/* Latest News & Courses */}
+
       <section className="py-24 bg-dark text-white relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[url('/dots.svg')] bg-repeat" />
         
         <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
-            {/* News Column */}
             <div className="lg:col-span-1">
               <div className="flex justify-between items-end mb-12">
                 <h2 className="text-3xl font-bold border-l-4 border-primary pl-4">最新消息</h2>
@@ -175,7 +168,7 @@ export default function Home() {
                   { date: "FEB 28", cat: "專業資源", title: "【新書推薦】《情緒焦點治療實務手冊》中文版上市" },
                   { date: "JAN 12", cat: "學術分享", title: "蘇珊·強森博士：依附科學在現代社會的應用" },
                 ].map((item, i) => (
-                  <Link key={i} href="/news" className="block group">
+                  <Link key={i} href="/news" className="block group text-left">
                     <div className="flex gap-6 items-start">
                       <div className="shrink-0 text-center">
                         <span className="block text-xl font-bold text-primary">{item.date.split(' ')[1]}</span>
@@ -191,7 +184,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Courses Column */}
             <div className="lg:col-span-2">
               <div className="flex justify-between items-end mb-12">
                 <h2 className="text-3xl font-bold border-l-4 border-accent pl-4">即將開課</h2>
@@ -202,7 +194,7 @@ export default function Home() {
                   { title: "EFT 伴侶治療國際認證：初階 (Externship)", date: "2024/05/20 - 05/23", status: "報名中", price: "NT$ 28,000" },
                   { title: "情緒焦點個人治療 (EFIT)：一階課程", date: "2024/07/08 - 07/11", status: "即將截止", price: "NT$ 25,000" },
                 ].map((course, i) => (
-                  <div key={i} className="p-8 bg-white/5 rounded-3xl border border-white/10 hover:border-accent/50 transition-all group flex flex-col justify-between">
+                  <div key={i} className="p-8 bg-white/5 rounded-3xl border border-white/10 hover:border-accent/50 transition-all group flex flex-col justify-between text-left">
                     <div>
                       <div className="flex justify-between items-start mb-6">
                         <span className={cn(
@@ -230,7 +222,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="py-24 bg-primary text-dark relative overflow-hidden">
         <div className="absolute top-0 right-0 w-1/3 h-full bg-accent/20 skew-x-12 translate-x-1/2" />
         <div className="relative max-w-5xl mx-auto px-6 lg:px-8 text-center">
