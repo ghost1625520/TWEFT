@@ -50,12 +50,20 @@ export function Footer() {
           {/* Brand Info */}
           <div className="space-y-8">
             <Link href="/" className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg">
-                <Globe className="text-white" size={28} />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-white tracking-tight text-xl leading-none">臺灣 EFT 治療學會</span>
-                <span className="text-[10px] text-primary font-bold tracking-widest uppercase">Asia EFT Center</span>
+              <div className="relative h-14 w-auto min-w-[140px] transition-transform duration-500 hover:scale-105">
+                <img 
+                  src="/logo.png" 
+                  alt="twEFT 臺灣 EFT 情緒焦點學會" 
+                  className="h-full w-auto object-contain brightness-0 invert" 
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  }}
+                />
+                <div className="hidden flex-col">
+                  <span className="font-bold text-white tracking-tight text-xl leading-none">臺灣 EFT 治療學會</span>
+                  <span className="text-[10px] text-primary font-bold tracking-widest uppercase">Asia EFT Center</span>
+                </div>
               </div>
             </Link>
             <p className="text-white/50 text-sm leading-relaxed max-w-xs">

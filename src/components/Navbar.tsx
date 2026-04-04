@@ -81,16 +81,23 @@ export function Navbar() {
       )}>
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg group-hover:rotate-12 transition-transform duration-500">
-              <Globe className="text-white" size={24} />
-            </div>
-            <div className="flex flex-col text-left">
-              <span className={cn(
-                "font-bold tracking-tight text-lg leading-none transition-colors",
-                scrolled || isLightPage ? "text-white" : "text-white"
-              )}>臺灣 EFT 治療學會</span>
-              <span className="text-[10px] text-primary font-bold tracking-widest uppercase">Asia EFT Center</span>
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="relative h-12 w-auto min-w-[120px] transition-transform duration-500 group-hover:scale-105">
+              {/* Using img for the user-provided logo */}
+              <img 
+                src="/logo.png" 
+                alt="twEFT 臺灣 EFT 情緒焦點學會" 
+                className="h-full w-auto object-contain brightness-0 invert" 
+                onError={(e) => {
+                  // Fallback if logo.png is not yet uploaded
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+              <div className="hidden flex-col text-left">
+                <span className="font-bold text-white tracking-tight text-lg leading-none">臺灣 EFT 治療學會</span>
+                <span className="text-[10px] text-primary font-bold tracking-widest uppercase">Asia EFT Center</span>
+              </div>
             </div>
           </Link>
 
