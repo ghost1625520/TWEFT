@@ -2,86 +2,82 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export async function middleware(req: NextRequest) {
-  let res = NextResponse.next({
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
     request: {
-      headers: req.headers,
+      headers: request.headers,
     },
   });
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  // Safety Guard: If environment variables are missing, don't crash
+  if (!supabaseUrl || !supabaseKey) {
+    return response;
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
-        get(name: string) {
-          return req.cookies.get(name)?.value;
+        getAll() {
+          return request.cookies.getAll();
         },
-        set(name: string, value: string, options: CookieOptions) {
-          req.cookies.set({
-            name,
-            value,
-            ...options,
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
+          response = NextResponse.next({
+            request,
           });
-          res = NextResponse.next({
-            request: {
-              headers: req.headers,
-            },
-          });
-          res.cookies.set({
-            name,
-            value,
-            ...options,
-          });
-        },
-        remove(name: string, options: CookieOptions) {
-          req.cookies.set({
-            name,
-            value: '',
-            ...options,
-          });
-          res = NextResponse.next({
-            request: {
-              headers: req.headers,
-            },
-          });
-          res.cookies.set({
-            name,
-            value: '',
-            ...options,
-          });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          );
         },
       },
     }
   );
 
+  // This will refresh the session if it is expired
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const isAuthPage = request.nextUrl.pathname.startsWith('/portal/dashboard') || 
+                     request.nextUrl.pathname.startsWith('/admin');
 
   // Protect portal and admin routes
-  if (req.nextUrl.pathname.startsWith('/portal/dashboard') || req.nextUrl.pathname.startsWith('/admin')) {
-    if (!session) {
-      return NextResponse.redirect(new URL('/portal', req.url));
-    }
+  if (isAuthPage && !user) {
+    return NextResponse.redirect(new URL('/portal', request.url));
   }
 
   // Admin and Staff only for /admin
-  if (req.nextUrl.pathname.startsWith('/admin')) {
+  if (request.nextUrl.pathname.startsWith('/admin') && user) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', session?.user.id)
+      .eq('id', user.id)
       .single();
 
     if (profile?.role !== 'Admin' && profile?.role !== 'Staff' && profile?.role !== 'Editor') {
-      return NextResponse.redirect(new URL('/portal/dashboard', req.url));
+      return NextResponse.redirect(new URL('/portal/dashboard', request.url));
     }
   }
 
-  return res;
+  return response;
 }
 
 export const config = {
-  matcher: ['/portal/dashboard/:path*', '/admin/:path*'],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public (static assets)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|public).*)',
+  ],
 };

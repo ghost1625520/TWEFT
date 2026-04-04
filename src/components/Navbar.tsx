@@ -61,16 +61,23 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const isLightPage = !['/', '/portal'].includes(pathname) && !pathname.startsWith('/portal/dashboard');
+
   return (
     <nav className={cn(
       "fixed top-0 left-0 right-0 z-50 transition-all duration-500 px-4 py-4",
       scrolled ? "py-2" : "py-6"
     )}>
       <div className={cn(
-        "max-w-7xl mx-auto rounded-full transition-all duration-500 border border-white/10",
+        "max-w-7xl mx-auto rounded-full transition-all duration-500 border",
         scrolled 
-          ? "bg-dark/80 backdrop-blur-xl shadow-2xl px-6 py-2" 
-          : "bg-white/5 backdrop-blur-md px-8 py-3"
+          ? "bg-dark/80 backdrop-blur-xl shadow-2xl px-6 py-2 border-white/10" 
+          : cn(
+              "backdrop-blur-md px-8 py-3",
+              isLightPage 
+                ? "bg-dark/40 border-dark/10 shadow-lg" 
+                : "bg-white/5 border-white/10"
+            )
       )}>
         <div className="flex items-center justify-between">
           {/* Logo */}
@@ -79,7 +86,10 @@ export function Navbar() {
               <Globe className="text-white" size={24} />
             </div>
             <div className="flex flex-col text-left">
-              <span className="font-bold text-white tracking-tight text-lg leading-none">臺灣 EFT 治療學會</span>
+              <span className={cn(
+                "font-bold tracking-tight text-lg leading-none transition-colors",
+                scrolled || isLightPage ? "text-white" : "text-white"
+              )}>臺灣 EFT 治療學會</span>
               <span className="text-[10px] text-primary font-bold tracking-widest uppercase">Asia EFT Center</span>
             </div>
           </Link>
