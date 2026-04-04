@@ -4,7 +4,7 @@ import { SubpageHero } from '@/components/SubpageHero';
 import { motion } from 'motion/react';
 import { 
   Award, 
-  Linkedin, 
+  Globe as Linkedin, 
   Globe, 
   Mail, 
   ArrowRight,

@@ -7,9 +7,9 @@ import {
   Phone, 
   MapPin,
   Globe,
-  Plus as Facebook,
-  Plus as Instagram,
-  Plus as Youtube
+  Globe as Facebook,
+  Globe as Instagram,
+  Globe as Youtube
 } from 'lucide-react';
 
 const footerLinks = [

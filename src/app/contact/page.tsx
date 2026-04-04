@@ -8,8 +8,8 @@ import {
   Phone, 
   MapPin, 
   Clock,
-  Instagram,
-  Facebook,
+  Globe as Instagram,
+  Globe as Facebook,
   Globe
 } from 'lucide-react';
 
