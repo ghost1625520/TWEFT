@@ -2,3 +2,6 @@ node_modules/
 .next/
 next-env.d.ts
 temp-global.gitconfig
+.env*
+.DS_Store
+*.local
