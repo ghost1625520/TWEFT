@@ -2,6 +2,7 @@
 
 import { SubpageHero } from '@/components/SubpageHero';
 import { motion } from 'motion/react';
+import Link from 'next/link';
 import { 
   BookOpen, 
   Calendar, 
@@ -142,10 +143,10 @@ export default function CoursesPage() {
                     <p className="text-xs text-dark/40 font-bold uppercase tracking-widest mb-1">投資未來</p>
                     <p className="text-3xl font-black text-dark tracking-tighter">{course.price}</p>
                   </div>
-                  <button className="w-full sm:w-auto px-10 py-5 bg-dark text-white font-bold rounded-2xl flex items-center justify-center gap-3 hover:bg-primary transition-all">
+                  <Link href={`/courses/${i}`} className="w-full sm:w-auto px-10 py-5 bg-dark text-white font-bold rounded-2xl flex items-center justify-center gap-3 hover:bg-primary transition-all">
                     了解更多並報名
                     <ArrowRight size={20} />
-                  </button>
+                  </Link>
                 </div>
               </div>
             </motion.div>

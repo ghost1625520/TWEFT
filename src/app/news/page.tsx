@@ -2,6 +2,7 @@
 
 import { SubpageHero } from '@/components/SubpageHero';
 import { motion } from 'motion/react';
+import Link from 'next/link';
 import { 
   Bell, 
   Calendar, 
@@ -88,10 +89,10 @@ export default function NewsPage() {
                    <p className="text-dark/60 leading-relaxed max-w-2xl">
                      {news.description}
                    </p>
-                   <button className="flex items-center gap-2 text-dark font-bold hover:gap-4 transition-all text-sm group-hover:text-primary">
+                   <Link href={`/news/${i}`} className="flex items-center gap-2 text-dark font-bold hover:gap-4 transition-all text-sm group-hover:text-primary">
                      閱讀更多全文
                      <ArrowRight size={18} />
-                   </button>
+                   </Link>
                 </div>
               </motion.div>
             ))}
