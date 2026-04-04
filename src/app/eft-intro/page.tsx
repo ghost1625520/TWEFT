@@ -7,8 +7,7 @@ import {
   ShieldCheck, 
   Zap, 
   RefreshCw,
-  ArrowRight,
-  Plus
+  ArrowRight
 } from 'lucide-react';
 
 const eftSteps = [

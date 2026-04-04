@@ -8,7 +8,6 @@ import {
   BookOpen, 
   Users, 
   ShieldCheck,
-  Video,
   FileCheck,
   ArrowRight,
   TrendingUp,

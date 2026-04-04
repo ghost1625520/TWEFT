@@ -3,7 +3,6 @@
 import { SubpageHero } from '@/components/SubpageHero';
 import { motion } from 'motion/react';
 import { 
-  Award, 
   Globe as Linkedin, 
   Globe, 
   Mail, 
@@ -11,7 +10,6 @@ import {
   ShieldCheck,
   GraduationCap,
   History,
-  TrendingUp,
   Briefcase
 } from 'lucide-react';
 

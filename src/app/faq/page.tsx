@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Plus, 
   Minus, 
-  HelpCircle, 
   MessageCircle, 
   Search,
   ArrowRight

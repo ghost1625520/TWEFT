@@ -4,13 +4,10 @@ import { SubpageHero } from '@/components/SubpageHero';
 import { motion } from 'motion/react';
 import { 
   BookOpen, 
-  Video, 
   Calendar, 
-  Users,
   Search,
   ArrowRight,
   Filter,
-  CheckCircle,
   Clock,
   MapPin
 } from 'lucide-react';

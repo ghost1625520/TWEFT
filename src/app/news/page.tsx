@@ -5,7 +5,6 @@ import { motion } from 'motion/react';
 import { 
   Bell, 
   Calendar, 
-  Tag, 
   ArrowRight,
   ChevronRight,
   Newspaper,

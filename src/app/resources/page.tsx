@@ -6,11 +6,8 @@ import {
   FileText, 
   Video, 
   Download, 
-  ExternalLink, 
   Search,
-  BookOpen,
   ArrowRight,
-  Filter,
   Layers,
   Lock
 } from 'lucide-react';

@@ -7,10 +7,7 @@ import {
   MapPin, 
   User, 
   Star, 
-  Filter,
   CheckCircle,
-  Phone,
-  Mail,
   ArrowRight,
   ShieldCheck
 } from 'lucide-react';
