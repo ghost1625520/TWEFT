@@ -11,11 +11,26 @@ import {
   Layout,
   BookOpen,
   Calendar,
-  MessageSquare
+  MessageSquare,
+  LogIn
 } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function PortalPage() {
+  const { signInWithGoogle, user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user && !loading) {
+      router.push('/portal/dashboard');
+    }
+  }, [user, loading, router]);
+
+  if (loading) return null;
+
   return (
     <main className="min-h-screen bg-dark flex flex-col items-center justify-center relative overflow-hidden py-40 px-6">
       {/* Abstract Background Decoration */}
@@ -50,7 +65,7 @@ export default function PortalPage() {
                 專業成長的<br/><span className="text-primary">核心樞紐</span>
               </h1>
               <p className="text-xl text-white/50 leading-relaxed max-w-md">
-                登入您的專屬帳戶，存取豐富的臨床文獻、影音課程與獲取最新的專業發展支援。
+                登入您的專屬帳戶，掌握最新的課程動態、臨床文獻，並與專業社群建立連結。
               </p>
             </div>
 
@@ -87,41 +102,67 @@ export default function PortalPage() {
                   <p className="text-white/30 text-sm font-bold uppercase tracking-[0.2em]">Member Authentication</p>
                 </div>
 
-                <form className="space-y-6">
-                   <div className="space-y-2">
-                     <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest ml-1">帳號 / 電子郵件</label>
-                     <div className="relative">
-                        <User className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20" size={20} />
-                        <input 
-                          type="text" 
-                          placeholder="Your account"
-                          className="w-full bg-white/5 border border-white/10 rounded-3xl px-14 py-5 text-white focus:bg-white/10 focus:border-primary transition-all outline-none placeholder:text-white/10"
-                        />
-                     </div>
-                   </div>
-                   <div className="space-y-2">
-                     <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest ml-1">登入密碼</label>
-                     <div className="relative">
-                        <Key className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20" size={20} />
-                        <input 
-                          type="password" 
-                          placeholder="••••••••"
-                          className="w-full bg-white/5 border border-white/10 rounded-3xl px-14 py-5 text-white focus:bg-white/10 focus:border-primary transition-all outline-none placeholder:text-white/10"
-                        />
-                     </div>
-                   </div>
-                   <div className="flex items-center justify-between px-2">
-                      <label className="flex items-center gap-3 cursor-pointer group">
-                         <div className="w-5 h-5 rounded-md border-2 border-white/20 bg-white/5 group-hover:border-primary transition-all" />
-                         <span className="text-xs font-bold text-white/40 group-hover:text-white/60 transition-colors">記住我</span>
-                      </label>
-                      <button className="text-xs font-bold text-primary hover:text-accent transition-colors">忘記密碼？</button>
-                   </div>
-                   <button className="w-full py-6 bg-primary text-white font-black rounded-3xl flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-2xl shadow-primary/30 uppercase tracking-widest">
-                      <span>安全登入</span>
-                      <ArrowRight size={20} />
+                <div className="space-y-6">
+                   {/* Google Login Button */}
+                   <button 
+                    onClick={signInWithGoogle}
+                    className="w-full py-5 bg-white text-dark font-bold rounded-3xl flex items-center justify-center gap-4 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl"
+                   >
+                     <LogIn size={24} />
+                     <span>使用 Google 帳號登入</span>
                    </button>
-                </form>
+
+                   <div className="flex items-center gap-4 py-2">
+                     <div className="h-px flex-grow bg-white/10" />
+                     <span className="text-[10px] uppercase tracking-widest text-white/20 font-bold">或者</span>
+                     <div className="h-px flex-grow bg-white/10" />
+                   </div>
+
+                   <form 
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      router.push('/portal/dashboard');
+                    }}
+                    className="space-y-6"
+                   >
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest ml-1">帳號 / 電子郵件</label>
+                        <div className="relative">
+                            <User className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20" size={20} />
+                            <input 
+                              type="text" 
+                              placeholder="Your account"
+                              className="w-full bg-white/5 border border-white/10 rounded-3xl px-14 py-5 text-white focus:bg-white/10 focus:border-primary transition-all outline-none placeholder:text-white/10"
+                            />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-white/40 uppercase tracking-widest ml-1">登入密碼</label>
+                        <div className="relative">
+                            <Key className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20" size={20} />
+                            <input 
+                              type="password" 
+                              placeholder="••••••••"
+                              className="w-full bg-white/5 border border-white/10 rounded-3xl px-14 py-5 text-white focus:bg-white/10 focus:border-primary transition-all outline-none placeholder:text-white/10"
+                            />
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between px-2">
+                          <label className="flex items-center gap-3 cursor-pointer group">
+                            <div className="w-5 h-5 rounded-md border-2 border-white/20 bg-white/5 group-hover:border-primary transition-all" />
+                            <span className="text-xs font-bold text-white/40 group-hover:text-white/60 transition-colors">記住我</span>
+                          </label>
+                          <button className="text-xs font-bold text-primary hover:text-accent transition-colors">忘記密碼？</button>
+                      </div>
+                      <button 
+                        type="submit"
+                        className="w-full py-6 bg-primary/20 border border-primary/30 text-primary font-black rounded-3xl flex items-center justify-center gap-3 hover:bg-primary hover:text-white transition-all uppercase tracking-widest"
+                      >
+                          <span>帳號密碼登入</span>
+                          <ArrowRight size={20} />
+                      </button>
+                   </form>
+                </div>
 
                 <div className="pt-8 border-t border-white/5 flex flex-col items-center gap-5">
                    <p className="text-xs text-white/30 font-bold">還沒有專業會員帳號？</p>

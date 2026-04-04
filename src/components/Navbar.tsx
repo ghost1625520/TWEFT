@@ -10,9 +10,11 @@ import {
   ChevronDown, 
   User, 
   Globe, 
-  Search
+  Search,
+  LayoutDashboard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
 
 const navItems = [
   { 
@@ -51,6 +53,7 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
   const pathname = usePathname();
+  const { profile, loading } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -131,16 +134,18 @@ export function Navbar() {
             <button className="p-2 text-white/60 hover:text-white transition-colors">
               <Search size={20} />
             </button>
-            <Link 
-              href="/portal"
-              className="group relative px-6 py-2.5 bg-accent text-dark font-bold rounded-full overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(226,241,175,0.3)]"
-            >
-              <div className="relative z-10 flex items-center gap-2">
-                <User size={18} />
-                <span>會員專區</span>
-              </div>
-              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-            </Link>
+            {!loading && (
+              <Link 
+                href={profile ? "/portal/dashboard" : "/portal"}
+                className="group relative px-6 py-2.5 bg-accent text-dark font-bold rounded-full overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(226,241,175,0.3)]"
+              >
+                <div className="relative z-10 flex items-center gap-2">
+                  {profile ? <LayoutDashboard size={18} /> : <User size={18} />}
+                  <span>{profile ? (profile.full_name || '後台儀表板') : '會員專區'}</span>
+                </div>
+                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+              </Link>
+            )}
           </div>
 
           <button 
@@ -188,12 +193,12 @@ export function Navbar() {
               ))}
               <div className="h-px bg-white/10 my-2"></div>
               <Link 
-                href="/portal"
+                href={profile ? "/portal/dashboard" : "/portal"}
                 className="w-full py-4 bg-accent text-dark font-bold rounded-2xl flex items-center justify-center gap-2"
                 onClick={() => setIsOpen(false)}
               >
-                <User size={20} />
-                會員專區
+                {profile ? <LayoutDashboard size={20} /> : <User size={20} />}
+                {profile ? (profile.full_name || '後台儀表板') : '會員專區'}
               </Link>
             </div>
           </motion.div>
