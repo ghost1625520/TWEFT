@@ -34,7 +34,7 @@ const footerLinks = [
   {
     title: '服務與支持',
     links: [
-      { name: '找心理師', href: '/find-therapist' },
+      { name: '國際認證心理師', href: '/find-therapist' },
       { name: '最新動態', href: '/news' },
       { name: '會員專區', href: '/portal' },
       { name: '隱私政策', href: '/privacy' },

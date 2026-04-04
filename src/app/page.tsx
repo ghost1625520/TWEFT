@@ -135,7 +135,7 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               { icon: BookOpen, title: "專業課程", desc: "從初階到進階的完整認證體系", href: "/courses" },
-              { icon: Users, title: "尋找心理師", desc: "媒合最受專業認證的 EFT 治療師", href: "/find-therapist" },
+              { icon: Users, title: "國際認證心理師", desc: "媒合最受專業認證的 EFT 治療師", href: "/find-therapist" },
               { icon: Award, title: "認證路徑", desc: "邁向國際認證治療師的必經之路", href: "/certification" },
             ].map((item, i) => (
               <Link 

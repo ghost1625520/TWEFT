@@ -43,7 +43,7 @@ const navItems = [
     ]
   },
   { name: '活動公告', href: '/news' },
-  { name: '找心理師', href: '/find-therapist', highlight: true },
+  { name: '國際認證心理師', href: '/find-therapist', highlight: true },
 ];
 
 export function Navbar() {

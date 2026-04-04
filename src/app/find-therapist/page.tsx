@@ -52,7 +52,7 @@ const therapists = [
   },
   {
     name: '謝○○ 諮商師',
-    category: 'LEVEL A',
+    category: 'LEVEL A 完訓',
     title: '諮商心理師',
     location: '台中市西區',
     institution: '心靈綠洲工作室',
@@ -60,7 +60,7 @@ const therapists = [
   },
   {
     name: '李○○ 心理師',
-    category: 'LEVEL A',
+    category: 'LEVEL A 完訓',
     title: '臨床心理師',
     location: '高雄市左營區',
     institution: '高醫附設中學',
@@ -68,7 +68,7 @@ const therapists = [
   },
   {
     name: '王○○ 心理師',
-    category: 'LEVEL A',
+    category: 'LEVEL A 完訓',
     title: '諮商心理師',
     location: '桃園市桃園區',
     institution: '桃園市心理衛生中心',
@@ -76,7 +76,7 @@ const therapists = [
   }
 ];
 
-const categories = ['全部', '培訓師', '督導', '治療師', 'LEVEL A'];
+const categories = ['全部', '培訓師', '督導', '治療師', 'LEVEL A 完訓'];
 const regions = ['選擇地區 (全台)', '台北市', '新北市', '桃園市', '台中市', '台南市', '高雄市'];
 
 export default function FindTherapistPage() {
@@ -88,7 +88,10 @@ export default function FindTherapistPage() {
     return therapists.filter(t => {
       const matchCategory = filterCategory === '全部' || t.category === filterCategory;
       const matchRegion = selectedRegion === '選擇地區 (全台)' || t.location.includes(selectedRegion);
-      const matchSearch = t.name.includes(searchQuery) || (t.institution && t.institution.includes(searchQuery));
+      const matchSearch = 
+        t.name.includes(searchQuery) || 
+        (t.institution && t.institution.includes(searchQuery)) ||
+        t.location.includes(searchQuery);
       return matchCategory && matchRegion && matchSearch;
     });
   }, [filterCategory, selectedRegion, searchQuery]);
@@ -96,8 +99,8 @@ export default function FindTherapistPage() {
   return (
     <main className="bg-[#FAF9F6]">
       <SubpageHero 
-        title="找心理師" 
-        subtitle="Find a Therapist"
+        title="國際認證心理師" 
+        subtitle="Certified Practitioners"
         description="尋找經過專業 EFT 培訓的治療師。我們致力於為您媒合最合適的專業支援，協助您在安全的環境中重建連結。"
       />
 
@@ -162,18 +165,19 @@ export default function FindTherapistPage() {
               exit={{ opacity: 0, y: -10 }}
               className="space-y-10"
             >
-              <div className="flex items-end justify-between mb-8">
-                <div className="space-y-1">
-                  <h2 className="text-2xl font-bold text-dark">搜尋結果</h2>
-                  <p className="text-sm text-dark/40 font-bold uppercase tracking-widest">Found {filteredTherapists.length} practitioners</p>
+              {/* Certified Section Title */}
+              {(filterCategory === '全部' || filterCategory !== 'LEVEL A 完訓') && filteredTherapists.some(t => t.category !== 'LEVEL A 完訓') && (
+                <div className="mb-4">
+                   <h2 className="text-3xl font-black text-dark tracking-tight">推薦心理師 (培訓師、督導、治療師)</h2>
+                   <p className="text-dark/40 font-bold uppercase tracking-[0.3em] text-xs">Recommended Certified Practitioners</p>
                 </div>
-              </div>
+              )}
 
               {/* Certified Cards View */}
-              {(filterCategory === '全部' || filterCategory === '培訓師' || filterCategory === '督導' || filterCategory === '治療師') && (
+              {(filterCategory === '全部' || filterCategory !== 'LEVEL A 完訓') && (
                 <div className="flex flex-col gap-12">
                   {filteredTherapists
-                    .filter(t => t.category !== 'LEVEL A')
+                    .filter(t => t.category !== 'LEVEL A 完訓')
                     .map((therapist, i) => (
                     <motion.div
                       key={therapist.name}
@@ -249,16 +253,15 @@ export default function FindTherapistPage() {
               )}
 
               {/* Level A Table View */}
-              {(filterCategory === '全部' || filterCategory === 'LEVEL A') && (
+              {(filterCategory === '全部' || filterCategory === 'LEVEL A 完訓') && filteredTherapists.some(t => t.category === 'LEVEL A 完訓') && (
                 <div className="space-y-10">
-                   {(filterCategory === '全部' && filteredTherapists.some(t => t.category === 'LEVEL A')) && (
+                   {(filterCategory === '全部' || filterCategory === 'LEVEL A 完訓') && (
                      <div className="pt-20 border-t border-dark/5">
-                        <h2 className="text-3xl font-black text-dark mb-4 tracking-tight">LEVEL A 完訓名錄</h2>
+                        <h2 className="text-3xl font-black text-dark mb-4 tracking-tight">LEVEL A 完訓名冊</h2>
                         <p className="text-dark/40 font-bold uppercase tracking-[0.3em] text-xs">Foundation Level Practitioners</p>
                      </div>
                    )}
-                   {(filterCategory === 'LEVEL A' || (filterCategory === '全部' && filteredTherapists.some(t => t.category === 'LEVEL A'))) && (
-                     <div className="overflow-x-auto rounded-[2.5rem] border border-dark/5 bg-white shadow-xl shadow-dark/5">
+                   <div className="overflow-x-auto rounded-[2.5rem] border border-dark/5 bg-white shadow-xl shadow-dark/5">
                         <table className="w-full text-left">
                            <thead>
                               <tr className="bg-dark/5 text-dark/40 text-[10px] uppercase font-black tracking-[0.3em] border-b border-dark/5">
@@ -270,7 +273,7 @@ export default function FindTherapistPage() {
                            </thead>
                            <tbody className="divide-y divide-dark/5">
                               {filteredTherapists
-                                .filter(t => t.category === 'LEVEL A')
+                                .filter(t => t.category === 'LEVEL A 完訓')
                                 .map((t, idx) => (
                                 <motion.tr 
                                   key={t.name}
@@ -299,7 +302,6 @@ export default function FindTherapistPage() {
                            </tbody>
                         </table>
                      </div>
-                   )}
                 </div>
               )}
             </motion.div>
