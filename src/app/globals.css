@@ -2,23 +2,23 @@
 
 @theme {
   --color-primary: #8A9FA8;
-  --color-secondary: #62466B;
-  --color-accent: #E2F1AF;
-  --color-dark: #03312E;
+  --color-secondary: #B8A398;
+  --color-accent: #D4D9C5;
+  --color-dark: #2D3639;
   
   --color-background: #ffffff;
-  --color-foreground: #171717;
+  --color-foreground: #2D3639;
   
   --font-sans: "Inter", "Outfit", "Roboto", "Noto Sans TC", sans-serif;
 }
 
 :root {
   --background: #ffffff;
-  --foreground: #03312E;
+  --foreground: #2D3639;
   --primary: #8A9FA8;
-  --secondary: #62466B;
-  --accent: #E2F1AF;
-  --dark: #03312E;
+  --secondary: #B8A398;
+  --accent: #D4D9C5;
+  --dark: #2D3639;
 }
 
 @media (prefers-color-scheme: dark) {

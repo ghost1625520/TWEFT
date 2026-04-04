@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -33,7 +34,7 @@ export default function RootLayout({
         <main className="flex-grow">
           {children}
         </main>
-        {/* Footer will be added in Phase 2 */}
+        <Footer />
       </body>
     </html>
   );
