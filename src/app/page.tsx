@@ -19,18 +19,19 @@ export default function Home() {
 
         <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]" />
 
-        <div className="relative max-w-7xl mx-auto px-6 lg:px-8 w-full pt-20">
+        <div className="relative max-w-7xl mx-auto px-6 lg:px-8 w-full pt-32 pb-20">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, ease: "easeOut" }}
+              className="relative z-20"
             >
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold tracking-widest uppercase mb-8"
+                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold tracking-widest uppercase mb-8 backdrop-blur-md"
               >
                 <span className="w-2 h-2 rounded-full bg-accent animate-ping" />
                 Emotionally Focused Therapy
@@ -38,7 +39,7 @@ export default function Home() {
               
               <h1 className="text-5xl md:text-7xl font-bold text-white mb-8 leading-[1.1] tracking-tight">
                 建立深層連結<br />
-                <span className="text-primary italic font-light">重塑</span>依附關係
+                <span className="text-primary italic font-light drop-shadow-[0_0_30px_rgba(var(--primary-rgb),0.3)]">重塑</span>依附關係
               </h1>
               
               <p className="text-xl text-white/60 mb-10 leading-relaxed max-w-xl">
@@ -48,10 +49,11 @@ export default function Home() {
               <div className="flex flex-wrap gap-4">
                 <Link 
                   href="/courses" 
-                  className="px-8 py-4 bg-primary text-dark font-bold rounded-full hover:bg-white transition-all shadow-xl hover:shadow-primary/20 flex items-center gap-2 group"
+                  className="px-8 py-4 bg-primary text-dark font-bold rounded-full hover:bg-white transition-all shadow-xl hover:shadow-primary/20 flex items-center gap-2 group relative overflow-hidden"
                 >
-                  探索認證課程 
-                  <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                  <span className="relative z-10">探索認證課程</span>
+                  <ArrowRight size={20} className="relative z-10 group-hover:translate-x-1 transition-transform" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                 </Link>
                 <Link 
                   href="/eft-intro" 
@@ -61,31 +63,34 @@ export default function Home() {
                 </Link>
               </div>
 
-              <div className="grid grid-cols-3 gap-8 mt-16 pt-12 border-t border-white/10">
-                <div>
-                  <div className="text-2xl font-bold text-white mb-1">500+</div>
-                  <div className="text-xs text-white/40 font-bold tracking-wider uppercase">認證會員</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-white mb-1">20+</div>
-                  <div className="text-xs text-white/40 font-bold tracking-wider uppercase">國際督導</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-white mb-1">100+</div>
-                  <div className="text-xs text-white/40 font-bold tracking-wider uppercase">年度課程</div>
-                </div>
+              <div className="grid grid-cols-3 gap-8 mt-16 pt-12 border-t border-white/10 overflow-hidden">
+                {[
+                  { label: "認證會員", value: "500+" },
+                  { label: "國際督導", value: "20+" },
+                  { label: "年度課程", value: "100+" }
+                ].map((stat, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 + i * 0.1 }}
+                  >
+                    <div className="text-2xl font-bold text-white mb-1">{stat.value}</div>
+                    <div className="text-[10px] text-white/40 font-bold tracking-wider uppercase">{stat.label}</div>
+                  </motion.div>
+                ))}
               </div>
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, scale: 0.9, rotate: -2 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
               transition={{ duration: 1, ease: "easeOut" }}
-              className="relative hidden lg:block"
+              className="relative hidden lg:block z-10"
             >
-              <div className="relative z-10 aspect-square rounded-3xl overflow-hidden glass p-4">
-                <div className="w-full h-full rounded-2xl overflow-hidden bg-slate-800">
-                  <div className="w-full h-full bg-gradient-to-br from-primary/40 via-secondary/20 to-dark relative group">
+              <div className="relative aspect-[4/5] rounded-[3rem] overflow-hidden glass p-4 border border-white/10 shadow-2xl">
+                <div className="w-full h-full rounded-[2.5rem] overflow-hidden bg-slate-900 shadow-inner">
+                  <div className="w-full h-full bg-gradient-to-br from-primary/40 via-secondary/10 to-dark relative group">
                     <Image 
                       src="https://images.unsplash.com/photo-1573497620053-ea5310f94a17?auto=format&fit=crop&q=80&w=1000" 
                       alt="EFT Therapy Session"
@@ -93,7 +98,12 @@ export default function Home() {
                       className="object-cover mix-blend-overlay group-hover:scale-110 transition-transform duration-1000"
                       priority
                     />
-                    <div className="absolute inset-0 bg-dark/20 group-hover:bg-transparent transition-colors duration-700" />
+                    <div className="absolute inset-0 bg-dark/40 group-hover:bg-dark/10 transition-colors duration-700" />
+                    
+                    {/* Floating Pulse Effect */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                       <div className="w-24 h-24 rounded-full bg-primary/20 animate-ping opacity-20" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -101,29 +111,29 @@ export default function Home() {
               <motion.div 
                 animate={{ y: [0, -20, 0] }}
                 transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute -top-10 -right-10 glass p-6 rounded-2xl shadow-2xl z-20 max-w-[200px]"
+                className="absolute -top-12 -right-12 glass p-6 rounded-3xl shadow-2xl z-20 max-w-[220px] backdrop-blur-2xl border border-white/20"
               >
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2 bg-accent rounded-lg text-dark">
+                  <div className="p-2.5 bg-accent rounded-xl text-dark shadow-lg shadow-accent/20">
                     <Award size={20} />
                   </div>
-                  <span className="text-xs font-bold text-white">國際認證</span>
+                  <span className="text-xs font-black text-white uppercase tracking-widest">國際認證</span>
                 </div>
-                <div className="text-sm text-white/60 leading-tight">符合 ICEEFT 國際標準認證路徑</div>
+                <div className="text-sm font-bold text-white/70 leading-tight">符合 ICEEFT 國際標準認證路徑</div>
               </motion.div>
 
               <motion.div 
                 animate={{ y: [0, 20, 0] }}
                 transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute -bottom-10 -left-10 glass p-6 rounded-2xl shadow-2xl z-20 max-w-[200px]"
+                className="absolute -bottom-10 -left-12 glass p-6 rounded-3xl shadow-2xl z-20 max-w-[220px] backdrop-blur-2xl border border-white/20"
               >
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="p-2 bg-primary rounded-lg text-white">
+                  <div className="p-2.5 bg-primary rounded-xl text-white shadow-lg shadow-primary/20">
                     <Users size={20} />
                   </div>
-                  <span className="text-xs font-bold text-white">專業社群</span>
+                  <span className="text-xs font-black text-white uppercase tracking-widest">專業社群</span>
                 </div>
-                <div className="text-sm text-white/60 leading-tight">匯集全台頂尖 EFT 治療師</div>
+                <div className="text-sm font-bold text-white/70 leading-tight">匯集全台頂尖 EFT 治療師團隊</div>
               </motion.div>
             </motion.div>
           </div>
