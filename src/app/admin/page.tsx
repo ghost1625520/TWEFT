@@ -28,7 +28,11 @@ import {
   CreditCard,
   ShieldCheck,
   FileText,
-  MapPin
+  MapPin,
+  Zap,
+  Clock,
+  MessageCircle,
+  ArrowRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ModuleRenderer, type ModuleData, type ModuleType } from '@/components/ModuleRenderer';
