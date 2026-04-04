@@ -21,4 +21,50 @@ export interface UserProfile {
   role: UserRole;
   full_name?: string;
   avatar_url?: string;
+  permissions: string[];
+  membership_status?: string;
+}
+
+export interface SitePage {
+  id: string;
+  slug: string;
+  title: string;
+  seo_description?: string;
+}
+
+export interface SiteModule {
+  id: string;
+  page_id: string;
+  type: string;
+  title?: string;
+  subtitle?: string;
+  content?: string;
+  items?: any;
+  image_url?: string;
+  order_index: number;
+}
+
+export interface Course {
+  id: string;
+  title: string;
+  category?: string;
+  status: 'Active' | 'Draft' | 'Archived';
+  price?: string;
+  syllabus?: any;
+}
+
+export interface NewsItem {
+  id: string;
+  title: string;
+  content?: string;
+  category?: string;
+  publish_date: string;
+}
+
+export interface ResourceItem {
+  id: string;
+  title: string;
+  category?: string;
+  file_url?: string;
+  description?: string;
 }

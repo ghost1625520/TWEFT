@@ -11,6 +11,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   updateRole: (role: UserRole) => Promise<void>;
+  hasPermission: (permission: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -66,6 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role: 'Guest',
           full_name: newUser.user.user_metadata.full_name,
           avatar_url: newUser.user.user_metadata.avatar_url,
+          permissions: ['view_cms'],
         };
         const { data: createdProfile } = await supabase
           .from('profiles')
@@ -104,8 +106,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const hasPermission = (permission: string) => {
+    if (profile?.role === 'Admin') return true; // Admins have all permissions
+    return profile?.permissions?.includes(permission) ?? false;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signInWithGoogle, signOut, updateRole }}>
+    <AuthContext.Provider value={{ user, profile, loading, signInWithGoogle, signOut, updateRole, hasPermission }}>
       {children}
     </AuthContext.Provider>
   );
