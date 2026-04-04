@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion } from "motion/react";
 import { ArrowRight, BookOpen, Users, Award, ChevronRight } from "lucide-react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 export default function Home() {
@@ -85,10 +86,12 @@ export default function Home() {
               <div className="relative z-10 aspect-square rounded-3xl overflow-hidden glass p-4">
                 <div className="w-full h-full rounded-2xl overflow-hidden bg-slate-800">
                   <div className="w-full h-full bg-gradient-to-br from-primary/40 via-secondary/20 to-dark relative group">
-                    <img 
+                    <Image 
                       src="https://images.unsplash.com/photo-1573497620053-ea5310f94a17?auto=format&fit=crop&q=80&w=1000" 
                       alt="EFT Therapy Session"
-                      className="w-full h-full object-cover mix-blend-overlay group-hover:scale-110 transition-transform duration-1000"
+                      fill
+                      className="object-cover mix-blend-overlay group-hover:scale-110 transition-transform duration-1000"
+                      priority
                     />
                     <div className="absolute inset-0 bg-dark/20 group-hover:bg-transparent transition-colors duration-700" />
                   </div>
