@@ -79,6 +79,7 @@ export default function AdminDashboard() {
   }, [pageModules, currentPage]);
 
   const baseWidth = previewDevice === 'desktop' ? 1280 : 390;
+  const baseHeight = previewDevice === 'mobile' ? 844 : 1200;
   const scale = simulatorWidth > 0 ? Math.max(0.1, Math.min(1, (simulatorWidth - 120) / baseWidth)) : 0.5;
 
   useEffect(() => { fetchPageData(currentPage); fetchGlobalData(); }, [currentPage]);
@@ -146,7 +147,7 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-[#0E1B22] flex flex-col text-white">
       <header className="px-12 py-8 flex items-center justify-between border-b border-white/5 bg-dark/20 backdrop-blur-3xl sticky top-0 z-[100]">
-        <div className="flex items-center gap-6"><div className="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center text-primary"><Layout size={24} /></div><div><h1 className="text-2xl font-black">twEFT Command Center</h1><p className="text-white/20 text-[8px] uppercase tracking-widest">Masterpiece v9.0 • Review Queue & Analytics Enabled</p></div></div>
+        <div className="flex items-center gap-6"><div className="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center text-primary"><Layout size={24} /></div><div><h1 className="text-2xl font-black">twEFT Command Center</h1><p className="text-white/20 text-[8px] uppercase tracking-widest">Masterpiece v9.1 • Proportional Scaling & UI Polish Enabled</p></div></div>
         <div className="flex items-center gap-6">{activeTab === 'cms' && (<div className="flex items-center bg-white/5 rounded-2xl p-1 border border-white/10"><button onClick={() => setViewMode('edit')} className={cn("px-6 py-2 rounded-xl text-[10px] font-black", viewMode === 'edit' ? 'bg-white text-dark' : 'text-white/20')}>EDITOR</button><button onClick={() => setViewMode('preview')} className={cn("px-6 py-2 rounded-xl text-[10px] font-black", viewMode === 'preview' ? 'bg-accent text-dark' : 'text-white/20')}>PREVIEW</button></div>)}<button onClick={handlePublish} className="px-8 py-3 bg-primary rounded-2xl text-xs font-black shadow-2xl">發佈更新</button></div>
       </header>
       <nav className="px-12 py-6 bg-white/[0.02] border-b border-white/5 flex gap-2 overflow-x-auto no-scrollbar">
@@ -171,12 +172,12 @@ export default function AdminDashboard() {
                      <div className="text-[8px] font-black text-white/10 uppercase tracking-[0.4em]">PROPORTIONAL RENDER ENGINE • {Math.round(scale*100)}%</div>
                   </div>
                   <div className="flex-grow overflow-auto p-12 flex justify-center items-start custom-scrollbar bg-black/90">
-                     <div style={{ width: baseWidth * scale, height: 'max-content', transition: 'all 0.5s ease', marginTop: '48px' }} className="relative">
+                     <div style={{ width: baseWidth * scale, height: baseHeight * scale, transition: 'all 0.5s ease', marginTop: '48px' }} className="relative">
                         <div className="absolute -top-12 left-0 right-0 h-12 bg-[#1A252B] rounded-t-[2.5rem] border border-white/10 border-b-0 flex items-center px-8 gap-3 z-[60] shadow-2xl">
                            <div className="flex gap-2"><div className="w-3 h-3 rounded-full bg-[#FF5F56]"/><div className="w-3 h-3 rounded-full bg-[#FFBD2E]"/><div className="w-3 h-3 rounded-full bg-[#27C93F]"/></div>
                            <div className="mx-auto bg-black/40 px-12 py-2 rounded-xl text-[9px] font-black text-white/20 uppercase tracking-[0.3em] flex items-center gap-3"><Globe size={10}/> https://tweft.org/{currentPage}</div>
                         </div>
-                        <motion.div style={{ width: baseWidth, height: previewDevice === 'mobile' ? '844px' : '1000px', transform: `scale(${scale})`, transformOrigin: 'top left' }} className={cn("bg-white overflow-hidden shadow-2xl", previewDevice === 'mobile' ? "rounded-b-[4rem]" : "rounded-b-[2.5rem]")}>
+                        <motion.div style={{ width: baseWidth, height: baseHeight, transform: `scale(${scale})`, transformOrigin: 'top left' }} className={cn("bg-white overflow-hidden shadow-2xl", previewDevice === 'mobile' ? "rounded-b-[4rem]" : "rounded-b-[2.5rem]")}>
                            <iframe ref={iframeRef} src="/admin/preview" className="w-full h-full border-none pointer-events-none" />
                         </motion.div>
                      </div>
