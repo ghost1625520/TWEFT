@@ -1,360 +1,116 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { 
-  Settings, 
-  Users, 
-  ShoppingCart, 
-  FileCheck, 
-  Layout, 
-  Eye, 
-  Save,
-  Plus,
-  Trash2,
-  Image as ImageIcon,
-  Type,
-  MoveUp,
-  MoveDown,
-  Monitor,
-  Smartphone,
-  List,
-  CheckCircle2,
-  BookOpen,
-  Play,
-  Search,
-  Filter,
-  X,
-  CreditCard,
-  ShieldCheck,
-  FileText,
-  MapPin,
-  Zap,
-  Clock,
-  MessageCircle,
-  ArrowRight,
-  Download,
-  Globe
+  Monitor, Smartphone, Layout, Save, Trash2, Plus, MoveUp, MoveDown, Globe, X, CheckCircle2, Monitor as MonitorIcon, 
+  Settings as SettingsIcon, BookOpen, List, ShoppingCart, Users, ShieldCheck, CreditCard, Type, Zap, Clock, MessageCircle, Image as ImageIcon, FileCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { ModuleRenderer, type ModuleData, type ModuleType } from '@/components/ModuleRenderer';
-
-// --- NEW ADMIN COMPONENTS ---
+import { ModuleData, ModuleType } from '@/components/ModuleRenderer';
 import CourseForm from '@/components/admin/CourseForm';
 import NewsForm from '@/components/admin/NewsForm';
 import ModuleEditor from '@/components/admin/ModuleEditor';
+import ReviewQueue from '@/components/admin/ReviewQueue';
 
 const INITIAL_LAYOUTS: { [key: string]: ModuleData[] } = {
   home: [
-    { id: 'h1', type: 'HeroSlider', title: '建立深層連結，重塑依附關係', subtitle: 'Emotionally Focused Therapy', content: '我們是「臺灣EFT治療學會」，致力於推廣情緒焦點治療 (EFT)，協助治療師與大眾建立更安全、更親密的關係。', background: 'dark' },
-    { id: 's1', type: 'Stats', items: [{label: '認證會員', value: '500+'}, {label: '國際督導', value: '20+'}, {label: '年度課程', value: '100+'}] },
-    { id: 'f1', type: 'Features', title: '核心發展亮點', items: [{title: '專業認證體系', description: '從初階到進階的完整認證路徑'}, {title: '國際師資與顧問', description: '媒合全球頂尖 EFT 專業見解'}, {title: '臨床培訓中心', description: '提供實務督導與專業團體支持'}] }
+    { id: 'h1', type: 'HeroSlider', title: '建立深層連結，重塑依附關係', subtitle: 'Emotionally Focused Therapy', content: '我們是「臺灣EFT治療學會」，致力於推廣情緒焦點治療 (EFT)。', background: 'dark' },
+    { id: 's1', type: 'Stats', items: [{label: '認證會員', value: '500+'}, {label: '國際督導', value: '20+'}] }
   ],
-  about: [
-    { id: 'ab1', type: 'HeroSlider', title: '推廣愛與連結的專業社群', subtitle: 'Our Mission & Vision', content: '臺灣EFT治療學會 (twEFT) 是經由 ICEEFT 授權，在台灣推廣情緒焦點治療的專業組織。我們致力於培訓專業治療師，並在大眾中推廣健康的依附關係與情感連結。', background: 'slate' },
-    { id: 'ab2', type: 'Timeline', title: '協會發展里程碑', subtitle: 'Our History', items: [{title: '學會正式成立', description: '2013年由劉婷老師引進並正式創立學會'}, {title: '國際認證轉型', description: '正式取得 ICEEFT 在台教學與認證授權'}, {title: '邁向多元發展', description: '發展多樣化進階工作坊與專業督導社群'}] }
-  ],
-  'eft-intro': [
-    { id: 'eft1', type: 'HeroSlider', title: '看見情緒背後的依附訊息', subtitle: 'What is EFT?', content: '情緒焦點治療 (EFT) 是一套結合人本主義與依附理論的短期治療方式，廣泛應用於個人、伴侶及家庭諮商。它能幫助我們在情緒混亂中，找到安全感的出口。', background: 'primary-light' },
-    { id: 'eft2', type: 'Features', title: 'EFT 的核心重點', items: [{title: '情緒就是能量', description: '情緒並非干擾，而是引導改變的主要動力'}, {title: '修復依附連結', description: '處理深刻的核心依賴需求，建立安全感'}, {title: '改變循環脈絡', description: '打破重複的負向互動與防衛機制'}] }
-  ],
-  news: [
-      { id: 'n1', type: 'SubpageHero', title: '協會最新動態', subtitle: 'News & Events', content: '掌握 EFT 在台灣的最新課程、講座與學術交流活動。', background: 'slate' },
-      { id: 'n2', type: 'TextContent', title: '關於最新消息', content: '此頁面內容將由消息管理系統自動同步。' }
-  ],
-  faculty: [
-    { id: 'f1', type: 'SubpageHero', title: '專業師資與督導團隊', subtitle: 'Our Experts', content: 'twEFT 匯集了經由 ICEEFT 認證的資深督導員與治療師，提供最紮實的培訓背景。', background: 'primary-light' },
-    { id: 'f2', type: 'FacultyGrid', items: [
-      { name: '劉婷 博士', title: 'ICEEFT 認證督導/訓練員', image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2', bio: 'twEFT 創辦人，致力於將 EFT 引進亞洲華人圈。' },
-      { name: '專家老師 A', title: '認證督導', image: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df', bio: '專長於伴侶治療與家庭系統。' },
-      { name: '專家老師 B', title: '認證治療師', image: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f', bio: '深耕個人情緒轉化與心理學研究。' }
-    ]}
-  ],
-  international: [
-    { id: 'int1', type: 'HeroSlider', title: '接軌國際：ICEEFT 全球聯盟', subtitle: 'Global Partnership', content: 'twEFT 與加拿大 ICEEFT 緊密連結，確保台灣的培訓品質符合全球統一的高標準認證體系。', background: 'dark' },
-    { id: 'int2', type: 'LogoCloud', title: '全球合作組織', subtitle: 'ICEEFT Affiliates', items: ['ICEEFT Canada', 'EFT Tennessee', 'EFT Hong Kong', 'EFT China', 'EFT Korea'] }
-  ],
-  membership: [
-    { id: 'm1', type: 'HeroSlider', title: '專業之路，與你同行', subtitle: 'Membership Plans', content: '加入 twEFT，享受國際級電子通訊報、專業課程優惠以及社群同儕支持。', background: 'slate' },
-    { id: 'm2', type: 'PricingGrid', title: '年度會員方案', items: [{title: '專業會員', price: 'NT$ 2,000/年', description: '適用於心理師、輔導老師相關領域工作者'}, {title: '一般會員', price: 'NT$ 1,500/年', description: '適用於對 EFT 有興趣之相關人士'}, {title: '學生會員', price: 'NT$ 1,000/年', description: '需提供在學相關證明'}] }
-  ],
-  contact: [
-    { id: 'c1', type: 'HeroSlider', title: '持續性的專業對話', subtitle: 'Get in Touch', content: '如果您有任何課程、合作或入會需求，請隨時與我們秘書處聯繫。', background: 'dark' },
-    { id: 'c2', type: 'ImageTextGrid', title: '協會辦事處', subtitle: 'Office Info', content: '服務時間：週一至週五 09:30 - 17:30。電話：(02) ****-**** 信箱：secretary@tweft.org.tw' }
-  ],
-  resources: [
-    { id: 'r1', type: 'HeroSlider', title: '深化學習：專業文獻與資源', subtitle: 'Resource Hub', content: '這裡收集了 EFT 的學術研究、臨床工具手冊與相關中文化量表。', background: 'slate' },
-    { id: 'r2', type: 'Features', title: '精選下載資源', items: [{title: '伴侶治療效能研究', description: '2024 中文譯本'}, {title: '依附風格評估表', description: '臨床實務使用參考'}] }
-  ],
-  courses: [
-      { id: 'co1', type: 'HeroSlider', title: '系統化的專業認證路徑', subtitle: 'LMS & Training', content: '從初階 Externship 到專題工作坊，我們提供完整的專業成長地圖。', background: 'dark' }
-  ]
+  about: [{ id: 'ab1', type: 'HeroSlider', title: '推廣與連結的專業社群', subtitle: 'Our Mission', content: '臺灣EFT治療學會是經由 ICEEFT 授權的專業組織。', background: 'slate' }]
 };
 
 export default function AdminDashboard() {
-  const { profile } = useAuth();
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [viewMode, setViewMode] = useState<'edit' | 'preview'>('edit');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
-  
-  const [siteData, setSiteData] = useState<{ [key: string]: ModuleData[] }>({});
-  const [loading, setLoading] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [currentPage, setCurrentPage] = useState('home');
+  const [siteData, setSiteData] = useState<{ [key: string]: ModuleData[] }>({});
   const [selectedModuleId, setSelectedModuleId] = useState<string | number | null>(null);
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
+  const [simulatorWidth, setSimulatorWidth] = useState(0);
+  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+  const [editItem, setEditItem] = useState<any>(null);
+  const [courses, setCourses] = useState<any[]>([
+    { id: 'm-c1', title: 'EFT 基礎認證課程 (Externship)', price: 'NT$ 18,000', author: 'Dr. Liu' },
+    { id: 'm-c2', title: '進階核心技能訓練', price: 'NT$ 22,000', author: 'ICEEFT Supervisor' }
+  ]);
+  const [news, setNews] = useState<any[]>([
+    { id: 'm-n1', title: '2024 春季中階培訓工作坊報名中', date: '2024-04-10' },
+    { id: 'm-n2', title: '學會章程修正草案公告', date: '2024-03-25' }
+  ]);
+  const [orders, setOrders] = useState<any[]>([
+    { id: 'm-o1', user_name: '測試帳號 A', amount: '12,000', status: 'pending' },
+    { id: 'm-o2', user_name: '測試帳號 B', amount: '8,000', status: 'approved' }
+  ]);
+  const [users, setUsers] = useState<any[]>([]);
+  const [pendingUsers, setPendingUsers] = useState<any[]>([
+    { id: 'mock-u1', full_name: '張書平', membership_type: '專業會員', region: '台北市', certification_level: 'Externship', created_at: new Date().toISOString() },
+    { id: 'mock-u2', full_name: '李艾倫', membership_type: '學生會員', region: '台中市', certification_level: '無', created_at: new Date().toISOString() },
+    { id: 'mock-u3', full_name: '陳美玲', membership_type: '專業會員', region: '高雄市', certification_level: 'Certified', created_at: new Date().toISOString() }
+  ]);
+  
+  const workspaceRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3500);
-  };
+  const showToast = (msg: string, type: 'success' | 'error' = 'success') => { setToast({ msg, type }); setTimeout(() => setToast(null), 3500); };
   const pageModules = siteData[currentPage] || INITIAL_LAYOUTS[currentPage] || [];
   const selectedModule = pageModules.find(m => m.id === selectedModuleId);
 
-  // --- COLLECTION STATE ---
-  const [courses, setCourses] = useState<any[]>([]);
-  const [news, setNews] = useState<any[]>([]);
-  const [orders, setOrders] = useState<any[]>([]);
-  const [downloads, setDownloads] = useState<any[]>([]);
-  const [users, setUsers] = useState<any[]>([]);
-  const [editItem, setEditItem] = useState<any>(null);
-
-  // --- SCALING ENGINE ---
-  const [simulatorWidth, setSimulatorWidth] = useState(1200);
-  const workspaceRef = React.useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!workspaceRef.current) return;
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) { if (entry.contentRect.width > 0) setSimulatorWidth(entry.contentRect.width); }
+    });
+    observer.observe(workspaceRef.current);
+    setSimulatorWidth(workspaceRef.current.offsetWidth);
+    return () => observer.disconnect();
+  }, [activeTab]);
 
   useEffect(() => {
-    const observer = new ResizeObserver((entries) => {
-      for (let entry of entries) {
-        setSimulatorWidth(entry.contentRect.width);
-      }
-    });
-    if (workspaceRef.current) observer.observe(workspaceRef.current);
-    return () => observer.disconnect();
-  }, []);
+    const data = JSON.stringify(pageModules);
+    localStorage.setItem('cms_preview_data', data);
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage({ type: 'UPDATE_CMS_PREVIEW', modules: pageModules }, '*');
+    }
+  }, [pageModules, currentPage]);
 
   const baseWidth = previewDevice === 'desktop' ? 1280 : 390;
-  const padding = 64; // p-8 * 2
-  const scale = Math.min(1, (simulatorWidth - padding) / baseWidth);
+  const scale = simulatorWidth > 0 ? Math.max(0.1, Math.min(1, (simulatorWidth - 120) / baseWidth)) : 0.5;
 
-
-
-  // --- DATABASE SYNC ---
-  useEffect(() => {
-    fetchPageData(currentPage);
-    fetchGlobalData();
-  }, [currentPage]);
-
-  // Scroll to selected module in simulator
-  useEffect(() => {
-    if (selectedModuleId) {
-      const element = document.getElementById(`preview-${selectedModuleId}`);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }
-  }, [selectedModuleId]);
-
+  useEffect(() => { fetchPageData(currentPage); fetchGlobalData(); }, [currentPage]);
   const fetchGlobalData = async () => {
-    try {
-      const { data: n } = await supabase.from('news').select('*').order('date', { ascending: false });
-      const { data: c } = await supabase.from('courses').select('*').order('id', { ascending: true });
-      const { data: o } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
-      const { data: d } = await supabase.from('downloads_resources').select('*').order('uploaded_at', { ascending: false });
-      const { data: u } = await supabase.from('profiles').select('*');
-      
-      if (n) setNews(n);
-      if (c) setCourses(c);
-      if (o) setOrders(o);
-      if (d) setDownloads(d);
-      if (u) setUsers(u);
-    } catch (err) {
-      console.error('Error fetching global data:', err);
-    }
+    const { data: n } = await supabase.from('news').select('*').order('date', { ascending: false });
+    const { data: c } = await supabase.from('courses').select('*').order('id', { ascending: true });
+    const { data: o } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+    const { data: u } = await supabase.from('profiles').select('*');
+    const { data: pu } = await supabase.from('profiles').select('*').eq('status', 'pending');
+    if (n) setNews(n); if (c) setCourses(c); if (o) setOrders(o); if (u) setUsers(u); if (pu) setPendingUsers(pu);
   };
-
   const fetchPageData = async (slug: string) => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('cms_pages')
-        .select('*')
-        .eq('slug', slug)
-        .single();
-
-      if (error && error.code !== 'PGRST116') throw error;
-      
-      if (data && data.modules && data.modules.length > 0) {
-        setSiteData(prev => ({ ...prev, [slug]: data.modules }));
-      } else {
-        const defaultLayout = INITIAL_LAYOUTS[slug] || [];
-        setSiteData(prev => ({ ...prev, [slug]: defaultLayout }));
-      }
-    } catch (err) {
-      console.error('Error fetching page data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.storage
-        .from('resources')
-        .upload(`${Date.now()}_${file.name}`, file);
-
-      if (error) throw error;
-      
-      const { error: dbErr } = await supabase
-        .from('downloads_resources')
-        .insert({
-           name: file.name,
-           file_path: data.path,
-           file_type: file.type,
-           uploaded_by: profile?.id
-        });
-
-      if (dbErr) throw dbErr;
-      
-      showToast('檔案上傳成功並已記錄至資料庫！');
-      fetchGlobalData();
-    } catch (err) {
-      console.error('Error uploading file:', err);
-      showToast('上傳失敗', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const restoreDefault = () => {
-    if (confirm('確定要恢復此頁面的初始模板嗎？這將覆蓋您目前尚未儲存的所有編輯。')) {
-      const defaultLayout = INITIAL_LAYOUTS[currentPage] || [];
-      setSiteData({ ...siteData, [currentPage]: defaultLayout });
-    }
-  };
-
-  // --- DATA MUTATIONS ---
-  const handleSaveCourse = async (courseData: any) => {
-    setLoading(true);
-    try {
-      const { id, type, ...rest } = courseData;
-      const { error } = id 
-        ? await supabase.from('courses').update(rest).eq('id', id)
-        : await supabase.from('courses').insert([rest]);
-
-      if (error) throw error;
-      showToast(id ? '課程已更新' : '新課程已發佈');
-      setEditItem(null);
-      fetchGlobalData();
-    } catch (err) {
-      console.error('Error saving course:', err);
-      showToast('儲存失敗', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSaveNews = async (newsData: any) => {
-    setLoading(true);
-    try {
-      const { id, type, ...rest } = newsData;
-      const { error } = id 
-        ? await supabase.from('news').update(rest).eq('id', id)
-        : await supabase.from('news').insert([rest]);
-
-      if (error) throw error;
-      showToast(id ? '公告已更新' : '新消息已發佈');
-      setEditItem(null);
-      fetchGlobalData();
-    } catch (err) {
-      console.error('Error saving news:', err);
-      showToast('儲存失敗', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyUser = async (userId: string) => {
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ is_verified: true })
-        .eq('id', userId);
-
-      if (error) throw error;
-      showToast('會員已成功核准並開啟進階權限');
-      fetchGlobalData();
-    } catch (err) {
-      console.error('Error verifying user:', err);
-      showToast('操作失敗', 'error');
-    }
-  };
-
-  const handleApproveOrder = async (orderId: string) => {
-    try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: 'approved' })
-        .eq('id', orderId);
-
-      if (error) throw error;
-      showToast('訂單已核准，會員權限已開通');
-      fetchGlobalData();
-    } catch (err) {
-      console.error('Error approving order:', err);
-      showToast('核准失敗', 'error');
-    }
+    const { data, error } = await supabase.from('cms_pages').select('*').eq('slug', slug).single();
+    if (!error && data?.modules) setSiteData(prev => ({ ...prev, [slug]: data.modules }));
+    else setSiteData(prev => ({ ...prev, [slug]: INITIAL_LAYOUTS[slug] || [] }));
   };
 
   const handlePublish = async () => {
     setSaveStatus('saving');
-    try {
-      const { error } = await supabase
-        .from('cms_pages')
-        .upsert({
-          slug: currentPage,
-          title: pagesMap.find((p: any) => p.id === currentPage)?.label || currentPage,
-          modules: siteData[currentPage],
-          is_published: true,
-          last_updated_at: new Date().toISOString()
-        }, { onConflict: 'slug' });
-
-      if (error) throw error;
-      setSaveStatus('success');
-      setTimeout(() => setSaveStatus('idle'), 3000);
-    } catch (err) {
-      console.error('Error saving page:', err);
-      setSaveStatus('error');
-    }
+    const { error } = await supabase.from('cms_pages').upsert({ slug: currentPage, title: pagesMap.find(p => p.id === currentPage)?.label || currentPage, modules: pageModules, is_published: true, last_updated_at: new Date().toISOString() }, { onConflict: 'slug' });
+    if (error) { setSaveStatus('error'); showToast('發佈失敗', 'error'); } 
+    else { setSaveStatus('success'); showToast('發佈成功！'); setTimeout(() => setSaveStatus('idle'), 3000); }
   };
 
-  // --- CMS ACTIONS ---
   const addModule = (type: ModuleType) => {
-    const newModule: ModuleData = {
-      id: Date.now().toString(),
-      type,
-      title: `新 ${type} 模塊`,
-      subtitle: '編輯小標題',
-      content: '在此輸入描述...',
-      items: type === 'Stats' ? [{ label: '新數據', value: '100' }] : []
-    };
+    const newModule: ModuleData = { id: Date.now().toString(), type, title: `新 ${type} 版塊`, subtitle: '編輯小標題', content: '在此輸入描述內容...', items: type === 'Stats' ? [{ label: '數據項目', value: '100' }] : [] };
     setSiteData({ ...siteData, [currentPage]: [...pageModules, newModule] });
+    setSelectedModuleId(newModule.id);
   };
 
   const updateModule = (id: string | number, data: Partial<ModuleData>) => {
-    const newModules = [...pageModules];
-    const index = newModules.findIndex(m => m.id === id);
-    if (index === -1) return;
-    newModules[index] = { ...newModules[index], ...data };
-    setSiteData({ ...siteData, [currentPage]: newModules });
+    setSiteData({ ...siteData, [currentPage]: pageModules.map(m => m.id === id ? { ...m, ...data } : m) });
   };
 
   const removeModule = (id: string | number) => {
@@ -370,520 +126,109 @@ export default function AdminDashboard() {
     setSiteData({ ...siteData, [currentPage]: newModules });
   };
 
+  const handleSaveCourse = async (data: any) => {
+    const { id, type, ...rest } = data;
+    const { error } = id ? await supabase.from('courses').update(rest).eq('id', id) : await supabase.from('courses').insert([rest]);
+    if (error) showToast('儲存失敗', 'error');
+    else { showToast('課程已儲存'); setEditItem(null); fetchGlobalData(); }
+  };
+
   const tabs = [
-    { id: 'dashboard', label: '總覽', icon: Monitor },
-    { id: 'cms', label: '頁面編輯', icon: Layout },
-    { id: 'course_mgr', label: '課程管理', icon: BookOpen },
-    { id: 'news_mgr', label: '消息管理', icon: List },
-    { id: 'orders', label: '訂單審核', icon: ShoppingCart },
-    { id: 'downloads', label: '資源管理', icon: Download },
-    { id: 'users', label: '會員審核', icon: Users },
-    { id: 'settings', label: '系統設定', icon: ShieldCheck },
+    { id: 'dashboard', label: '總覽', icon: MonitorIcon }, { id: 'reviews', label: '申請審核', icon: FileCheck }, { id: 'cms', label: '頁面編輯', icon: Layout }, 
+    { id: 'course_mgr', label: '課程管理', icon: BookOpen }, { id: 'news_mgr', label: '消息管理', icon: List }, 
+    { id: 'orders', label: '訂單審核', icon: ShoppingCart }, { id: 'settings', label: '系統設定', icon: ShieldCheck }
   ];
-
-  const pagesMap = [
-    { id: 'home', label: '首頁' },
-    { id: 'about', label: '關於學會' },
-    { id: 'eft-intro', label: '什麼是 EFT' },
-    { id: 'international', label: '國際連結' },
-    { id: 'courses', label: '課程總覽' },
-    { id: 'news', label: '最新消息' },
-    { id: 'faculty', label: '師資團隊' },
-    { id: 'resources', label: '下載專區' },
-    { id: 'membership', label: '加入會員' },
-    { id: 'contact', label: '聯絡我們' }
-  ];
-
+  const pagesMap = [{ id: 'home', label: '首頁' }, { id: 'about', label: '關於學會' }, { id: 'eft-intro', label: '什麼是 EFT' }, { id: 'news', label: '最新消息' }, { id: 'membership', label: '加入會員' }, { id: 'contact', label: '聯絡我們' }];
   const moduleTemplates: { type: ModuleType; label: string; icon: any }[] = [
-    { type: 'HeroSlider', label: '主要大氣輪播', icon: Monitor },
-    { type: 'SubpageHero', label: '內頁標題區', icon: Layout },
-    { type: 'TextContent', label: '純文字內文', icon: Type },
-    { type: 'Features', label: '功能特性列表', icon: Zap },
-    { type: 'Stats', label: '數據統計框', icon: CheckCircle2 },
-    { type: 'ImageTextGrid', label: '圖文錯綜排列', icon: Layout },
-    { type: 'FacultyGrid', label: '師資團隊網格', icon: Users },
-    { type: 'LogoCloud', label: '夥伴標誌雲', icon: Globe },
-    { type: 'Timeline', label: '發展發展時序', icon: Clock },
-    { type: 'PricingGrid', label: '方案報價表格', icon: CreditCard },
-    { type: 'FAQ', label: '常見問題摺疊', icon: MessageCircle }
+    { type: 'HeroSlider', label: '主要大氣輪播', icon: Monitor }, { type: 'SubpageHero', label: '內頁標題區', icon: Layout }, { type: 'TextContent', label: '純文字內文', icon: Type }, { type: 'Features', label: '功能亮點', icon: Zap }, { type: 'Stats', label: '數據統計', icon: CheckCircle2 }, { type: 'ImageTextGrid', label: '圖文排列', icon: Layout }, { type: 'Timeline', label: '發展大事記', icon: Clock }, { type: 'PricingGrid', label: '方案報價', icon: CreditCard }, { type: 'FAQ', label: '常見問題', icon: MessageCircle }
   ];
 
   return (
-    <div className="min-h-screen bg-[#0E1B22] flex flex-col px-12 pb-20 text-white selection:bg-primary selection:text-white">
-      {/* Toast Notification */}
-      {toast && (
-        <div className={`fixed top-8 right-8 z-[500] px-8 py-4 rounded-2xl font-bold text-sm shadow-2xl flex items-center gap-3 transition-all ${
-          toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-        }`}>
-          {toast.type === 'success' ? <CheckCircle2 size={18} /> : <X size={18} />}
-          {toast.msg}
-        </div>
-      )}
-
-      {/* Header */}
-      <div className="flex items-center justify-between mb-12">
-        <div className="flex items-center gap-6">
-          <div className="w-14 h-14 bg-primary/10 border border-primary/20 rounded-2xl flex items-center justify-center shadow-2xl shadow-primary/10">
-             <Layout className="text-primary" size={28} />
-          </div>
-          <div>
-            <h1 className="text-4xl font-black tracking-tight">twEFT Command Center</h1>
-            <p className="text-white/40 font-bold uppercase tracking-[0.2em] text-[10px] mt-1">Live Management v2.5</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-           {activeTab === 'cms' && (
-             <div className="flex items-center bg-white/5 rounded-2xl p-1.5 border border-white/5">
-                <button onClick={() => setViewMode('edit')} className={`px-5 py-2.5 rounded-xl font-black text-xs transition-all ${viewMode === 'edit' ? 'bg-white text-dark' : 'text-white/40'}`}>EDITOR</button>
-                <button onClick={() => setViewMode('preview')} className={`px-5 py-2.5 rounded-xl font-black text-xs transition-all ${viewMode === 'preview' ? 'bg-accent text-dark' : 'text-white/40'}`}>PREVIEW</button>
-             </div>
-           )}
-           <button onClick={handlePublish} disabled={saveStatus === 'saving'} className="px-8 py-4 bg-primary text-white rounded-2xl text-sm font-black shadow-2xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
-             {saveStatus === 'saving' ? '儲存中...' : '同步發佈'}
-           </button>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex items-center gap-2 p-1.5 bg-white/5 border border-white/5 rounded-[2rem] w-fit mb-12 overflow-x-auto max-w-full">
+    <div className="min-h-screen bg-[#0E1B22] flex flex-col text-white">
+      <header className="px-12 py-8 flex items-center justify-between border-b border-white/5 bg-dark/20 backdrop-blur-3xl sticky top-0 z-[100]">
+        <div className="flex items-center gap-6"><div className="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center text-primary"><Layout size={24} /></div><div><h1 className="text-2xl font-black">twEFT Command Center</h1><p className="text-white/20 text-[8px] uppercase tracking-widest">Masterpiece v9.0 • Review Queue & Analytics Enabled</p></div></div>
+        <div className="flex items-center gap-6">{activeTab === 'cms' && (<div className="flex items-center bg-white/5 rounded-2xl p-1 border border-white/10"><button onClick={() => setViewMode('edit')} className={cn("px-6 py-2 rounded-xl text-[10px] font-black", viewMode === 'edit' ? 'bg-white text-dark' : 'text-white/20')}>EDITOR</button><button onClick={() => setViewMode('preview')} className={cn("px-6 py-2 rounded-xl text-[10px] font-black", viewMode === 'preview' ? 'bg-accent text-dark' : 'text-white/20')}>PREVIEW</button></div>)}<button onClick={handlePublish} className="px-8 py-3 bg-primary rounded-2xl text-xs font-black shadow-2xl">發佈更新</button></div>
+      </header>
+      <nav className="px-12 py-6 bg-white/[0.02] border-b border-white/5 flex gap-2 overflow-x-auto no-scrollbar">
         {tabs.map(tab => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-10 py-4 rounded-[1.5rem] text-sm font-black transition-all flex items-center gap-3 whitespace-nowrap ${activeTab === tab.id ? 'bg-primary text-white shadow-2xl shadow-primary/20 translate-y-[-2px]' : 'text-white/30 hover:text-white/70 hover:bg-white/5'}`}>
-            <tab.icon size={18} /> {tab.label}
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={cn("px-8 py-3.5 rounded-2xl text-[11px] font-black border transition-all whitespace-nowrap flex items-center gap-3", activeTab === tab.id ? "bg-white text-dark scale-105 shadow-2xl" : "bg-white/5 border-white/5 text-white/30")}>
+            <tab.icon size={16} /> 
+            {tab.label.toUpperCase()}
+            {tab.id === 'reviews' && pendingUsers.length > 0 && (
+              <span className="w-5 h-5 bg-primary text-white flex items-center justify-center rounded-full text-[8px] animate-pulse">{pendingUsers.length}</span>
+            )}
           </button>
         ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
-        {activeTab === 'cms' && (
-          <aside className="lg:col-span-1 space-y-8 h-fit sticky top-40">
-             <div className="p-8 bg-white/5 border border-white/5 rounded-[3rem] space-y-6 shadow-2xl">
-                <h3 className="text-[11px] font-black text-white/20 uppercase tracking-[0.4em]">頁面導覽</h3>
-                <div className="grid grid-cols-1 gap-1.5">
-                   {pagesMap.map(p => (
-                     <button key={p.id} onClick={() => setCurrentPage(p.id)} className={`w-full text-left px-5 py-3.5 rounded-2xl text-xs font-black transition-all ${currentPage === p.id ? 'bg-primary/20 text-primary border border-primary/20' : 'text-white/30 border-transparent hover:bg-white/5'}`}>{p.label}</button>
-                   ))}
-                </div>
-             </div>
-             <div className="p-8 bg-white/5 border border-white/5 rounded-[3rem] space-y-6 shadow-2xl">
-                <h3 className="text-[11px] font-black text-white/20 uppercase tracking-[0.4em]">模組庫</h3>
-                <div className="grid grid-cols-1 gap-2">
-                   {moduleTemplates.map(m => (
-                     <button key={m.type} onClick={() => addModule(m.type)} className="flex items-center gap-4 p-4 bg-white/5 border border-white/5 rounded-2xl text-[11px] font-black text-white/50 hover:border-primary transition-all group">
-                        <m.icon size={16} className="group-hover:text-primary" /> <span>{m.label}</span>
-                     </button>
-                   ))}
-                </div>
-             </div>
-          </aside>
-        )}
-
-        <div className={activeTab === 'cms' ? "lg:col-span-3" : "lg:col-span-4"}>
-            {viewMode === 'edit' ? (
-              <AnimatePresence mode="wait">
-                {activeTab === 'dashboard' && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10">
-                    <h2 className="text-4xl font-black">Admin 數據主控台</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                       {[
-                         { label: '學員總數', value: users.length, color: 'text-primary' },
-                         { label: '當月課程', value: courses.length, color: 'text-accent' },
-                         { label: '待審訂單', value: orders.filter(o=>o.status!=='approved').length, color: 'text-yellow-400' },
-                         { label: '最新消息', value: news.length, color: 'text-green-400' }
-                       ].map((k, i) => (
-                         <div key={i} className="p-8 bg-white/5 border border-white/5 rounded-[2.5rem] space-y-2">
-                            <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">{k.label}</p>
-                            <p className={`text-5xl font-black ${k.color}`}>{k.value}</p>
-                         </div>
-                       ))}
-                    </div>
-                    <div className="flex gap-4">
-                       <button onClick={()=>setActiveTab('course_mgr')} className="px-8 py-4 bg-white/5 rounded-2xl text-xs font-black hover:bg-primary transition-all">管理全球課程</button>
-                       <button onClick={()=>setActiveTab('news_mgr')} className="px-8 py-4 bg-white/5 rounded-2xl text-xs font-black hover:bg-primary transition-all">發佈今日公告</button>
-                       <button onClick={async ()=>{
-                          setLoading(true);
-                          try {
-                             for (const p of pagesMap) {
-                                const { error } = await supabase.from('cms_pages').upsert({
-                                   slug: p.id,
-                                   title: p.label,
-                                   modules: INITIAL_LAYOUTS[p.id] || [],
-                                   is_published: true
-                                }, { onConflict: 'slug' });
-                                if (error) throw error;
-                             }
-                             showToast('全站模板初始化成功！');
-                             fetchPageData(currentPage);
-                          } catch (err) {
-                             console.error(err);
-                             showToast('初始化失敗', 'error');
-                          } finally {
-                             setLoading(false);
-                          }
-                       }} className="px-8 py-4 bg-primary/20 text-primary border border-primary/20 rounded-2xl text-xs font-black hover:bg-primary hover:text-white transition-all">一鍵初始化全站內容模板</button>
-                    </div>
-                  </motion.div>
-                )}
-
-                {activeTab === 'cms' && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex h-[calc(100vh-280px)] -mx-12 -mb-20 overflow-hidden border-t border-white/5 bg-[#0A1211]">
-                    
-                    {/* CMS Left Sidebar: Structure & Navigation */}
-                    <div className="w-80 bg-[#0E1B22] border-r border-white/5 flex flex-col pt-8">
-                       <div className="px-8 mb-8">
-                          <h3 className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] mb-4">目標頁面</h3>
-                          <select 
-                             className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl text-xs font-black text-white outline-none focus:border-primary appearance-none"
-                             value={currentPage}
-                             onChange={(e) => {
-                                setCurrentPage(e.target.value);
-                                setSelectedModuleId(null);
-                             }}
-                          >
-                             {pagesMap.map(p => (
-                               <option key={p.id} value={p.id} className="bg-dark">{p.label}</option>
-                             ))}
-                          </select>
-                       </div>
-
-                       <div className="flex-grow overflow-y-auto px-6 custom-scrollbar space-y-2">
-                          <h3 className="px-2 text-[10px] font-black text-white/20 uppercase tracking-[0.4em] mb-4">版塊結構</h3>
-                          {pageModules.map((m, i) => (
-                            <div 
-                               key={m.id} 
-                               onClick={() => setSelectedModuleId(m.id)}
-                               className={cn(
-                                  "group flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all",
-                                  selectedModuleId === m.id ? "bg-primary text-white shadow-xl shadow-primary/20 scale-[1.02]" : "bg-white/5 text-white/40 hover:bg-white/10"
-                               )}
-                            >
-                               <div className="flex items-center gap-4">
-                                  <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", selectedModuleId === m.id ? "bg-white/20" : "bg-primary/20 text-primary")}>
-                                     <Layout size={14}/>
-                                  </div>
-                                  <span className="text-[11px] font-black tracking-tight">{m.title || m.type}</span>
-                               </div>
-                               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <button onClick={(e) => { e.stopPropagation(); moveModule(i, 'up'); }} className="p-1.5 hover:text-white"><MoveUp size={12}/></button>
-                                  <button onClick={(e) => { e.stopPropagation(); moveModule(i, 'down'); }} className="p-1.5 hover:text-white"><MoveDown size={12}/></button>
-                                  <button onClick={(e) => { e.stopPropagation(); removeModule(m.id); }} className="p-1.5 hover:text-red-400"><Trash2 size={12}/></button>
-                               </div>
-                            </div>
-                          ))}
-                          {pageModules.length === 0 && (
-                             <div className="py-20 text-center space-y-4 px-4">
-                                <div className="w-16 h-16 bg-white/5 rounded-3xl flex items-center justify-center mx-auto text-white/10"><Layout size={32}/></div>
-                                <p className="text-[10px] font-black text-white/20 uppercase tracking-widest">目前尚無版塊<br/>請由右側圖庫新增</p>
-                             </div>
-                          )}
-                       </div>
-                    </div>
-
-                    {/* CMS Center: Live Interactive Simulator */}
-                    <div ref={workspaceRef} className="flex-grow flex flex-col bg-[#050B0A] relative overflow-hidden">
-                       <div className="p-6 border-b border-white/5 flex items-center justify-between bg-dark/20 backdrop-blur-3xl z-40">
-                          <div className="flex items-center bg-white/5 rounded-2xl p-1 border border-white/5">
-                             <button onClick={() => setPreviewDevice('desktop')} className={cn("p-2 rounded-xl transition-all", previewDevice === 'desktop' ? "bg-white text-dark shadow-xl" : "text-white/40 hover:text-white")}><Monitor size={18}/></button>
-                             <button onClick={() => setPreviewDevice('mobile')} className={cn("p-2 rounded-xl transition-all", previewDevice === 'mobile' ? "bg-white text-dark shadow-xl" : "text-white/40 hover:text-white")}><Smartphone size={18}/></button>
-                          </div>
-                          <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">Live CMS Simulator v2.5</div>
-                          <div className="flex items-center gap-4">
-                             <div className="text-white/20 text-[9px] font-black uppercase">Scale: {Math.round(scale * 100)}%</div>
-                             <div className="text-accent text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                                <div className="w-2 h-2 bg-accent rounded-full animate-pulse"/> 同步預覽中
-                             </div>
-                          </div>
-                       </div>
-
-                       <div className="flex-grow p-10 flex justify-center items-start overflow-auto custom-scrollbar bg-black/50 relative">
-                          <div 
-                             style={{ 
-                                width: baseWidth * scale,
-                                height: 'max-content',
-                                transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
-                             }}
-                             className="relative"
-                          >
-                             <motion.div 
-                                style={{ 
-                                   width: baseWidth,
-                                   transform: `scale(${scale})`,
-                                   transformOrigin: 'top left',
-                                   minWidth: baseWidth
-                                }}
-                                className={cn(
-                                   "bg-white shadow-[0_100px_200px_rgba(0,0,0,0.8)] border-[12px] border-dark overflow-hidden transition-all duration-500",
-                                   previewDevice === 'mobile' ? "rounded-[3.5rem]" : "rounded-3xl"
-                                )}
-                             >
-                                <div className={cn(
-                                  "h-full overflow-hidden",
-                                  previewDevice === 'mobile' ? "min-h-[844px]" : "min-h-[1000px]"
-                                )}>
-                                   <ModuleRenderer 
-                                      modules={pageModules} 
-                                      isAdmin={true}
-                                      selectedId={selectedModuleId}
-                                      onSelect={(id) => setSelectedModuleId(id)}
-                                   />
-                                </div>
-                             </motion.div>
-                          </div>
-                       </div>
-                    </div>
-
-                    {/* CMS Right Sidebar: Field Editor or Gallery */}
-                    <div className="w-[450px] bg-[#0E1B22] border-l border-white/5 flex flex-col shadow-2xl relative z-50">
-                       {selectedModule ? (
-                          <div className="h-full flex flex-col animate-in fade-in slide-in-from-right-4 duration-300">
-                             <div className="p-8 border-b border-white/5 space-y-2 bg-dark/20 backdrop-blur-3xl">
-                                <div className="flex items-center justify-between">
-                                   <div className="w-12 h-12 bg-primary/20 text-primary rounded-2xl flex items-center justify-center shadow-lg border border-primary/20"><Layout size={24}/></div>
-                                   <button 
-                                      onClick={() => setSelectedModuleId(null)} 
-                                      className="p-3 bg-white/5 rounded-xl hover:bg-white/10 hover:text-red-400 transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/50"
-                                   >
-                                      <X size={14}/> 關閉編輯
-                                   </button>
-                                </div>
-                                <div className="pt-4">
-                                   <h3 className="text-xl font-black text-white">版塊內容設定</h3>
-                                   <p className="text-[10px] font-black text-primary uppercase tracking-widest mt-1">MODULE TYPE: {selectedModule.type}</p>
-                                </div>
-                             </div>
-                             <div className="flex-grow overflow-y-auto p-10 custom-scrollbar pb-32">
-                                <ModuleEditor 
-                                   module={selectedModule} 
-                                   onChange={(data) => updateModule(selectedModuleId!, data)} 
-                                />
-                             </div>
-                          </div>
-                       ) : (
-                          <div className="h-full flex flex-col animate-in fade-in duration-500">
-                             <div className="p-10 pb-6">
-                                <div className="px-5 py-2 bg-primary/20 text-primary border border-primary/20 rounded-full text-[10px] font-black uppercase tracking-[0.3em] w-fit mb-6">
-                                   Section Library
-                                </div>
-                                <h3 className="text-3xl font-black text-white tracking-tight mb-4">版塊組件庫</h3>
-                                <p className="text-xs text-white/30 font-bold leading-relaxed">
-                                   選擇下方版塊類型，直接將新內容插入至目前的「{pagesMap.find(p=>p.id===currentPage)?.label}」頁面。
-                                </p>
-                             </div>
-                             <div className="flex-grow overflow-y-auto px-10 custom-scrollbar pb-10">
-                                <div className="grid grid-cols-2 gap-4">
-                                   {moduleTemplates.map(m => (
-                                     <button 
-                                       key={m.type} 
-                                       onClick={() => addModule(m.type)} 
-                                       className="p-6 bg-white/5 border border-white/5 rounded-[2.5rem] text-[10px] font-black text-white/40 hover:bg-primary/20 hover:text-primary hover:border-primary/20 transition-all uppercase tracking-[0.2em] flex flex-col items-center gap-4 group"
-                                     >
-                                        <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center group-hover:bg-primary group-hover:text-white group-hover:shadow-xl group-hover:shadow-primary/30 transition-all border border-white/5 group-hover:border-transparent">
-                                           <m.icon size={20} />
-                                        </div>
-                                        <span className="text-center leading-tight">{m.label}</span>
-                                     </button>
-                                   ))}
-                                </div>
-                                
-                                <div className="mt-12 p-8 bg-white/2 rounded-[2.5rem] border border-white/5 space-y-4 text-center">
-                                   <Zap size={24} className="mx-auto text-primary" />
-                                   <p className="text-[10px] font-black text-primary uppercase tracking-widest">使用小秘訣</p>
-                                   <p className="text-[10px] text-white/30 leading-relaxed font-bold">
-                                      點擊左側「版塊結構」可快速跳轉至該區。
-                                      滑鼠懸停在版塊上可直接點擊「編輯」進入內容設定。
-                                   </p>
-                                </div>
-                             </div>
-                          </div>
-                       )}
-                    </div>
-                  </motion.div>
-                )}
-
-                {activeTab === 'course_mgr' && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10">
-                     <div className="flex justify-between items-end">
-                        <h2 className="text-4xl font-black">全球教育課程庫</h2>
-                        <button onClick={()=>setEditItem({ type: 'course' })} className="px-10 py-5 bg-accent text-dark rounded-2xl font-black shadow-2xl shadow-accent/20">建立新課程</button>
+      </nav>
+      <main className="flex-grow flex flex-col relative overflow-hidden">
+        <AnimatePresence mode="wait">
+          {activeTab === 'cms' ? (
+            <motion.div key="cms" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex h-[calc(100vh-210px)] overflow-hidden">
+               <aside className="w-80 border-r border-white/5 bg-[#0A1419] flex flex-col p-8"><label className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-4">目前編輯目標</label><select value={currentPage} onChange={(e)=>setCurrentPage(e.target.value)} className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl text-xs font-black mb-10">{pagesMap.map(p => <option key={p.id} value={p.id} className="bg-dark">{p.label}</option>)}</select><div className="space-y-2 overflow-y-auto no-scrollbar">{pageModules.map((m, i) => (<div key={m.id} onClick={() => setSelectedModuleId(m.id)} className={cn("group p-4 rounded-2xl cursor-pointer transition-all", selectedModuleId === m.id ? "bg-primary text-white" : "bg-white/5 text-white/30")}><div className="flex items-center justify-between"><span className="text-[10px] font-black uppercase truncate max-w-[120px]">{m.title || m.type}</span><div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={(e)=>{e.stopPropagation(); moveModule(i,'up');}}><MoveUp size={10}/></button><button onClick={(e)=>{e.stopPropagation(); removeModule(m.id);}}><Trash2 size={10}/></button></div></div></div>))}</div></aside>
+               <section ref={workspaceRef} className="flex-grow bg-[#050B0A] relative flex flex-col overflow-hidden">
+                  <div className="p-6 border-b border-white/5 flex items-center justify-between bg-dark/40">
+                     <div className="flex items-center bg-black/40 rounded-2xl p-1 border border-white/5"><button onClick={() => setPreviewDevice('desktop')} className={cn("px-4 py-2 rounded-xl text-[9px] font-black", previewDevice === 'desktop' ? "bg-white text-dark" : "text-white/20")}>DESKTOP</button><button onClick={() => setPreviewDevice('mobile')} className={cn("px-4 py-2 rounded-xl text-[9px] font-black", previewDevice === 'mobile' ? "bg-white text-dark" : "text-white/20")}>MOBILE</button></div>
+                     <div className="text-[8px] font-black text-white/10 uppercase tracking-[0.4em]">PROPORTIONAL RENDER ENGINE • {Math.round(scale*100)}%</div>
+                  </div>
+                  <div className="flex-grow overflow-auto p-12 flex justify-center items-start custom-scrollbar bg-black/90">
+                     <div style={{ width: baseWidth * scale, height: 'max-content', transition: 'all 0.5s ease', marginTop: '48px' }} className="relative">
+                        <div className="absolute -top-12 left-0 right-0 h-12 bg-[#1A252B] rounded-t-[2.5rem] border border-white/10 border-b-0 flex items-center px-8 gap-3 z-[60] shadow-2xl">
+                           <div className="flex gap-2"><div className="w-3 h-3 rounded-full bg-[#FF5F56]"/><div className="w-3 h-3 rounded-full bg-[#FFBD2E]"/><div className="w-3 h-3 rounded-full bg-[#27C93F]"/></div>
+                           <div className="mx-auto bg-black/40 px-12 py-2 rounded-xl text-[9px] font-black text-white/20 uppercase tracking-[0.3em] flex items-center gap-3"><Globe size={10}/> https://tweft.org/{currentPage}</div>
+                        </div>
+                        <motion.div style={{ width: baseWidth, height: previewDevice === 'mobile' ? '844px' : '1000px', transform: `scale(${scale})`, transformOrigin: 'top left' }} className={cn("bg-white overflow-hidden shadow-2xl", previewDevice === 'mobile' ? "rounded-b-[4rem]" : "rounded-b-[2.5rem]")}>
+                           <iframe ref={iframeRef} src="/admin/preview" className="w-full h-full border-none pointer-events-none" />
+                        </motion.div>
                      </div>
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {courses.map(c => (
-                          <div key={c.id} className="p-10 bg-white/5 border border-white/10 rounded-[3rem] relative group hover:border-accent transition-all">
-                             <button onClick={()=>setEditItem({ ...c, type: 'course' })} className="absolute top-10 right-10 p-4 bg-white/5 rounded-2xl hover:bg-accent hover:text-dark transition-all"><Settings size={20}/></button>
-                             <div className="space-y-4">
-                                <span className="px-4 py-1 bg-accent/20 text-accent rounded-lg text-[10px] font-black uppercase tracking-widest">{c.category}</span>
-                                <h3 className="text-3xl font-black">{c.title}</h3>
-                                <p className="text-xl text-white/40 font-bold">{c.price}</p>
-                             </div>
-                          </div>
-                        ))}
-                     </div>
-                  </motion.div>
-                )}
-
-                {activeTab === 'news_mgr' && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-                     <div className="flex justify-between items-end mb-4">
-                        <h2 className="text-4xl font-black">學會公告管理</h2>
-                        <button onClick={()=>setEditItem({ type: 'news' })} className="px-10 py-5 bg-primary text-white rounded-2xl font-black">發佈新消息</button>
-                     </div>
-                     {news.map(n => (
-                       <div key={n.id} className="p-8 bg-white/5 border border-white/5 rounded-[2.5rem] flex items-center justify-between group hover:border-primary transition-all">
-                          <div>
-                             <h4 className="text-xl font-black">{n.title}</h4>
-                             <p className="text-xs text-white/20 font-bold uppercase tracking-widest">{n.date} • {n.category || '活動消息'}</p>
-                          </div>
-                          <button onClick={()=>setEditItem({ ...n, type: 'news' })} className="px-6 py-3 bg-white/5 hover:bg-primary hover:text-white rounded-xl text-xs font-black transition-all">詳情與編輯</button>
+                  </div>
+               </section>
+               <aside className="w-[480px] border-l border-white/5 bg-[#0E1B22] flex flex-col">
+                  {selectedModule ? (<div className="h-full flex flex-col p-10"><h3 className="text-2xl font-black mb-8">屬性編輯器</h3><div className="flex-grow overflow-y-auto"><ModuleEditor module={selectedModule} onChange={(data) => updateModule(selectedModuleId!, data)} /></div></div>) : 
+                  (<div className="p-12"><h3 className="text-4xl font-black mb-8 leading-none">組件庫</h3><div className="grid grid-cols-2 gap-4">{moduleTemplates.map(m => (<button key={m.type} onClick={() => addModule(m.type)} className="p-8 bg-white/[0.03] border border-white/5 rounded-[2.5rem] hover:bg-primary transition-all flex flex-col items-center"><m.icon size={24} className="mb-4"/><span className="text-[10px] font-black uppercase text-white/30">{m.label}</span></button>))}</div></div>)}
+               </aside>
+            </motion.div>
+          ) : (
+            <motion.div key="others" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="px-12 py-10 space-y-12">
+               {activeTab === 'reviews' && (<ReviewQueue pendingUsers={pendingUsers} onApprove={async (id)=>{ await supabase.from('profiles').update({status:'active'}).eq('id',id); fetchGlobalData(); showToast('審核通過！'); }} onReject={async (id)=>{ await supabase.from('profiles').update({status:'rejected'}).eq('id',id); fetchGlobalData(); showToast('已駁回','error'); }} />)}
+               {activeTab === 'dashboard' && (
+                 <div className="space-y-12">
+                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                     {[{ label: '學會總會員', value: users.length, color: 'text-primary' }, { label: '待審核項目', value: pendingUsers.length, color: 'text-amber-500' }, { label: '運作中模件', value: news.length, color: 'text-green-400' }, { label: 'API 健全度', value: '100%', color: 'text-purple-400' }].map((k, i) => (
+                       <div key={i} className="p-10 bg-white/5 border border-white/5 rounded-[3.5rem] shadow-2xl relative overflow-hidden group">
+                         <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 mask-diagonal group-hover:scale-150 transition-transform"/>
+                         <p className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-2">{k.label}</p>
+                         <h4 className={cn("text-6xl font-black", k.color)}>{k.value}</h4>
                        </div>
                      ))}
-                  </motion.div>
-                )}
-
-                {activeTab === 'orders' && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white/5 border border-white/5 rounded-[3rem] overflow-hidden">
-                     <table className="w-full text-left">
-                        <thead className="bg-white/5 text-[10px] font-black uppercase tracking-[0.3em] text-white/30">
-                           <tr><th className="px-10 py-8">訂單 ID</th><th className="px-10 py-8">訂購人</th><th className="px-10 py-8">金額</th><th className="px-10 py-8 text-right">核操作</th></tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5">
-                           {orders.map(o => (
-                             <tr key={o.id} className="hover:bg-white/5 group">
-                                <td className="px-10 py-8 font-bold text-primary">{o.id}</td>
-                                <td className="px-10 py-8 font-black">{o.user_name}</td>
-                                <td className="px-10 py-8 text-white/60">{o.amount}</td>
-                                <td className="px-10 py-8 text-right">
-                                   {o.status === 'approved' 
-                                     ? <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">已核核</span>
-                                     : <button onClick={()=>handleApproveOrder(o.id)} className="px-6 py-2 bg-primary/10 text-primary rounded-xl text-[10px] font-black border border-primary/20 hover:bg-primary hover:text-white transition-all">核准入帳</button>}
-                                </td>
-                             </tr>
-                           ))}
-                        </tbody>
-                     </table>
-                  </motion.div>
-                )}
-
-                {activeTab === 'users' && (
-                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white/5 border border-white/5 rounded-[3rem] overflow-hidden">
-                      <table className="w-full text-left">
-                        <thead className="bg-white/5 text-[10px] font-black uppercase tracking-[0.3em] text-white/30">
-                           <tr><th className="px-10 py-8">用戶名稱</th><th className="px-10 py-8">級別角色</th><th className="px-10 py-8">狀態</th><th className="px-10 py-8 text-right">操作</th></tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5">
-                           {users.map(u => (
-                             <tr key={u.id} className="hover:bg-white/5 group">
-                                <td className="px-10 py-8 font-black">{u.full_name || u.email}</td>
-                                <td className="px-10 py-8 text-[10px] font-black uppercase text-primary tracking-widest">{u.role}</td>
-                                <td className="px-10 py-8">
-                                   {u.is_verified 
-                                     ? <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"/> 
-                                     : <div className="w-2 h-2 rounded-full bg-yellow-500"/>}
-                                </td>
-                                <td className="px-10 py-8 text-right">
-                                   <button onClick={()=>setEditItem({ ...u, type: 'user' })} className="p-3 bg-white/5 rounded-xl hover:bg-white/10 text-white/30 hover:text-white"><Settings size={16}/></button>
-                                </td>
-                             </tr>
-                           ))}
-                        </tbody>
-                      </table>
-                   </motion.div>
-                )}
-
-                {activeTab === 'settings' && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10">
-                    <h2 className="text-4xl font-black">核心系統設定</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                       <div className="p-10 bg-white/5 border border-white/5 rounded-[3rem] space-y-6">
-                          <h3 className="text-sm font-black text-white/30 uppercase tracking-[0.3em]">網站元數據</h3>
-                          <div className="space-y-4">
-                             {['網站標題', 'SEO描述', '聯絡信箱'].map(f=>(
-                               <div key={f} className="space-y-2">
-                                  <label className="text-[10px] font-black text-white/20 uppercase tracking-widest">{f}</label>
-                                  <input className="w-full bg-black/20 border border-white/10 p-4 rounded-2xl outline-none focus:border-primary" />
-                               </div>
-                             ))}
-                          </div>
-                       </div>
-                       <div className="p-10 bg-white/5 border border-white/5 rounded-[3rem] space-y-6">
-                          <h3 className="text-sm font-black text-white/30 uppercase tracking-[0.3em]">系統連線狀態</h3>
-                          {[ {n:'Supabase DB', s:'Online'}, {n:'Storage', s:'Ready'}, {n:'Auth', s:'Secure'} ].map(s=>(
-                            <div key={s.n} className="flex justify-between items-center p-5 bg-black/20 rounded-2xl">
-                               <span className="font-bold">{s.n}</span>
-                               <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">{s.s}</span>
-                            </div>
-                          ))}
-                       </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            ) : (
-                <div className="space-y-12">
-                   <h2 className="text-3xl font-black">即時預覽：{pagesMap.find(p => p.id === currentPage)?.label}</h2>
-                   <div className="bg-white rounded-[4rem] overflow-hidden min-h-[900px] shadow-[0_50px_100px_rgba(0,0,0,0.5)] border-[12px] border-dark relative">
-                      <div className="absolute top-10 right-10 z-50 px-8 py-4 bg-accent text-dark font-black rounded-full text-xs shadow-2xl flex items-center gap-4">
-                         <div className="w-3 h-3 bg-dark rounded-full animate-ping" />
-                         LIVE PREVIEW MODE
+                   </div>
+                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                      <div className="md:col-span-2 p-12 bg-white/5 border border-white/5 rounded-[4rem] flex flex-col justify-between h-[400px]">
+                         <div><h3 className="text-3xl font-black mb-2">營收與互動趨勢</h3><p className="text-white/20 text-xs font-bold uppercase tracking-widest">Analytics Dashboard • PRO</p></div>
+                         <div className="flex items-end gap-2 h-40">
+                            {[40, 70, 45, 90, 65, 80, 100].map((h, i) => (
+                              <div key={i} style={{ height: `${h}%` }} className="flex-grow bg-primary/20 rounded-t-xl hover:bg-primary transition-all cursor-pointer relative group">
+                                <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-primary text-white text-[9px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">DAY {i+1}</div>
+                              </div>
+                            ))}
+                         </div>
                       </div>
-                      <div className="h-full overflow-y-auto custom-scrollbar">
-                         <ModuleRenderer modules={pageModules} />
+                      <div className="p-12 bg-gradient-to-br from-primary/20 to-accent/5 border border-primary/20 rounded-[4rem] flex flex-col justify-between">
+                         <h3 className="text-2xl font-black uppercase leading-tight tracking-tighter">數據導出中心</h3>
+                         <div className="space-y-4">
+                            <button className="w-full py-5 bg-white text-dark rounded-3xl font-black text-xs">導出會員名錄 (.CSV)</button>
+                            <button className="w-full py-5 bg-white/5 border border-white/10 rounded-3xl font-black text-[10px] text-white/30 uppercase tracking-widest">營收分析報告</button>
+                         </div>
                       </div>
                    </div>
-                </div>
-            )}
-        </div>
-      </div>
-
-      {/* Enhanced Multi-purpose Edit Modal */}
-      <AnimatePresence>
-        {editItem && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[600] flex items-center justify-center p-6 md:p-12 lg:p-20 bg-dark/95 backdrop-blur-3xl">
-             <motion.div initial={{ scale: 0.9, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 30 }} className="w-full max-w-6xl h-full bg-[#1A252B] rounded-[4rem] border border-white/10 overflow-hidden flex flex-col relative shadow-[0_50px_150px_rgba(0,0,0,0.8)]">
-                <button onClick={() => setEditItem(null)} className="absolute top-8 right-8 z-50 p-4 bg-white/5 hover:bg-red-500 hover:text-white rounded-2xl transition-all"><X size={24}/></button>
-                
-                <div className="flex-grow overflow-hidden">
-                   {editItem.type === 'course' && <CourseForm initialData={editItem.id ? editItem : null} onSave={handleSaveCourse} onCancel={()=>setEditItem(null)} loading={loading} />}
-                   {editItem.type === 'news' && <NewsForm initialData={editItem.id ? editItem : null} onSave={handleSaveNews} onCancel={()=>setEditItem(null)} loading={loading} />}
-                   
-                   {editItem.type === 'cms_module' && (
-                     <div className="h-full flex flex-col">
-                        <div className="p-10 border-b border-white/5 flex items-center justify-between sticky top-0 bg-[#1A252B] z-10">
-                           <div className="flex items-center gap-6">
-                              <div className="w-16 h-16 bg-primary/20 rounded-3xl flex items-center justify-center text-primary shadow-2xl"><Layout size={32}/></div>
-                              <div><h2 className="text-3xl font-black text-white">模組數據編輯器</h2><p className="text-white/20 text-[10px] font-black uppercase tracking-widest mt-1">Schema Identifier: {editItem.id}</p></div>
-                           </div>
-                           <button onClick={()=>{updateModule(editItem.index, editItem); setEditItem(null); showToast('暫存已更新，請點擊同步發佈');}} className="px-10 py-4 bg-primary text-white rounded-2xl font-black shadow-2xl hover:scale-105 active:scale-95 transition-all">確認儲存暫存</button>
-                        </div>
-                        <div className="flex-grow overflow-y-auto p-12 custom-scrollbar pb-32">
-                           <ModuleEditor module={editItem} onChange={(d)=>setEditItem({...editItem, ...d})} />
-                        </div>
-                     </div>
-                   )}
-
-                   {editItem.type === 'user' && (
-                     <div className="p-20 flex flex-col justify-center h-full max-w-4xl mx-auto space-y-12">
-                        <div className="flex items-center gap-8">
-                           <div className="w-24 h-24 bg-primary rounded-[2rem] flex items-center justify-center font-black text-3xl">{(editItem.full_name || editItem.email)[0].toUpperCase()}</div>
-                           <div className="space-y-1">
-                              <h2 className="text-5xl font-black text-white">{editItem.full_name || '未設姓名'}</h2>
-                              <p className="text-primary font-bold text-xl">{editItem.email}</p>
-                           </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-8 bg-white/5 p-10 rounded-[3rem] border border-white/10">
-                           <div className="space-y-1"><p className="text-[10px] font-black text-white/20 uppercase tracking-widest">目前系統角色</p><p className="text-white/80 font-bold text-lg">{editItem.role || 'Member'}</p></div>
-                           <div className="space-y-1"><p className="text-[10px] font-black text-white/20 uppercase tracking-widest">身分驗證狀態</p><p className="text-white/80 font-bold text-lg">{editItem.is_verified ? '已核准專業人員' : '一般用戶 / 待審核'}</p></div>
-                        </div>
-                        <div className="flex gap-4">
-                           {!editItem.is_verified && <button onClick={()=>{handleVerifyUser(editItem.id); setEditItem(null);}} className="px-12 py-5 bg-green-500 text-white font-black rounded-3xl shadow-2xl hover:bg-green-600 transition-all flex items-center gap-3"><CheckCircle2 size={24}/> 核准專業身份</button>}
-                           <button className="px-12 py-5 bg-white/5 text-white/40 font-black rounded-3xl hover:bg-white/10 transition-all">手動調整賦權</button>
-                           <button className="px-12 py-5 bg-red-500/10 text-red-500 font-black rounded-3xl hover:bg-red-500 transition-all ml-auto">封鎖帳號</button>
-                        </div>
-                     </div>
-                   )}
-                </div>
-             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                 </div>
+               )}
+               {activeTab === 'course_mgr' && (<div className="space-y-8"><div className="flex justify-between items-end"><h2 className="text-4xl font-black">全球教育課程庫</h2><button onClick={()=>setEditItem({type:'course'})} className="px-10 py-5 bg-accent text-dark rounded-2xl font-black">建立新課程</button></div><div className="grid grid-cols-1 md:grid-cols-2 gap-8">{courses.map(c => (<div key={c.id} className="p-10 bg-white/5 border border-white/10 rounded-[3rem] group relative"><h3 className="text-3xl font-black mb-2">{c.title}</h3><p className="text-xl text-white/30 font-bold">{c.price}</p></div>))}</div></div>)}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
+      <AnimatePresence>{editItem && (<motion.div className="fixed inset-0 z-[600] flex items-center justify-center bg-dark/95 backdrop-blur-3xl p-6"><motion.div className="w-full max-w-4xl h-[80vh] bg-[#1A252B] rounded-[4rem] p-10 overflow-y-auto no-scrollbar relative"><button onClick={()=>setEditItem(null)} className="absolute top-10 right-10 p-4"><X/></button>{editItem.type === 'course' && <CourseForm initialData={editItem.id ? editItem : null} onSave={handleSaveCourse} onCancel={()=>setEditItem(null)} />}</motion.div></motion.div>)}</AnimatePresence>
+      <AnimatePresence>{toast && (<motion.div className={cn("fixed bottom-12 right-12 z-[1000] px-8 py-5 rounded-3xl bg-green-500 text-white font-black")}>{toast.msg}</motion.div>)}</AnimatePresence>
     </div>
   );
 }

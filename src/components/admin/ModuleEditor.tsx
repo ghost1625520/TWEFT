@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Plus, Trash2, MoveUp, MoveDown, Image as ImageIcon, Type, Layout, List, CheckCircle2, HelpCircle, Clock } from 'lucide-react';
+import { Plus, Trash2, MoveUp, MoveDown, Image as ImageIcon, Type, Layout, List, CheckCircle2, HelpCircle, Clock, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { type ModuleData, type ModuleType } from '@/components/ModuleRenderer';
@@ -207,6 +207,51 @@ export default function ModuleEditor({ module, onChange }: ModuleEditorProps) {
 
   return (
     <div className="space-y-10">
+      {/* Visibility & Draft Controls */}
+      <div className="flex items-center justify-between p-6 bg-primary/5 border border-primary/20 rounded-3xl">
+        <div className="flex items-center gap-4">
+          <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", module.isHidden ? "bg-amber-500/10 text-amber-500" : "bg-green-500/10 text-green-500")}>
+            {module.isHidden ? <EyeOff size={20}/> : <Eye size={20}/>}
+          </div>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-white/30">狀態：{module.isHidden ? '草稿 / 隱藏' : '已發佈 / 可見'}</p>
+            <h4 className="text-sm font-black uppercase tracking-tighter">顯示設定 (Visibility)</h4>
+          </div>
+        </div>
+        <button 
+          onClick={() => onChange({ isHidden: !module.isHidden })}
+          className={cn(
+            "px-6 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all shadow-xl",
+            module.isHidden ? "bg-amber-500 text-white" : "bg-white text-dark"
+          )}
+        >
+          {module.isHidden ? '還原為可見' : '切換為草稿'}
+        </button>
+      </div>
+
+      {/* Advanced Styling (Hero Slider specific) */}
+      {module.type === 'HeroSlider' && (
+        <div className="p-8 bg-white/5 border border-white/5 rounded-[2.5rem] space-y-6">
+          <div className="flex items-center justify-between">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-white/30">進階樣式控制 (Styling)</h4>
+            <div className="text-[10px] font-black text-primary uppercase">Opacity: {Math.round((module.overlayOpacity ?? 1) * 100)}%</div>
+          </div>
+          <div className="space-y-4">
+            <label className="text-[9px] font-black text-white/20 uppercase tracking-widest">文字對比度 (Overlay Opacity)</label>
+            <input 
+              type="range" min="0" max="1" step="0.05"
+              className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary"
+              value={module.overlayOpacity ?? 1}
+              onChange={(e) => onChange({ overlayOpacity: parseFloat(e.target.value) })}
+            />
+            <div className="flex justify-between text-[8px] font-black text-white/10">
+              <span>LIGHT TEXT</span>
+              <span>READABLE (DARK)</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Primary Content Editor */}
       <div className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

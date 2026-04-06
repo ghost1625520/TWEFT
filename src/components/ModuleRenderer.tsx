@@ -18,7 +18,9 @@ import {
   MessageCircle,
   Clock,
   ExternalLink,
-  Globe
+  Globe,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -51,6 +53,8 @@ export interface ModuleData {
   primaryAction?: { label: string; href: string };
   secondaryAction?: { label: string; href: string };
   background?: 'white' | 'dark' | 'primary-light' | 'slate';
+  isHidden?: boolean;
+  overlayOpacity?: number;
 }
 
 // --- Module Components ---
@@ -184,7 +188,10 @@ const HeroSliderModule = ({ data }: { data: ModuleData }) => (
           src={data.image || "https://images.unsplash.com/photo-1573497620053-ea5310f94a17"} 
           alt="Hero Slide" fill className="object-cover opacity-40" 
        />
-       <div className="absolute inset-0 bg-gradient-to-r from-dark via-dark/20 to-transparent z-10" />
+       <div 
+          className="absolute inset-0 bg-gradient-to-r from-dark via-dark/20 to-transparent z-10" 
+          style={{ opacity: data.overlayOpacity ?? 1 }}
+       />
     </div>
     <div className="container mx-auto px-6 relative z-20 h-full flex items-center">
        <div className="max-w-3xl space-y-8">
@@ -325,6 +332,8 @@ export function ModuleRenderer({
       {modules.map((module) => {
         const isSelected = selectedId === module.id;
         
+        if (module.isHidden && !isAdmin) return null;
+
         const content = (() => {
           switch (module.type) {
             case 'Hero': return <HeroModule key={module.id} data={module} />;
@@ -354,10 +363,19 @@ export function ModuleRenderer({
             onClick={() => onSelect?.(module.id)}
             className={cn(
               "relative group cursor-pointer transition-all duration-300",
-              isSelected ? "ring-4 ring-primary ring-inset z-50" : "hover:ring-2 hover:ring-primary/40 ring-inset"
+              isSelected ? "ring-4 ring-primary ring-inset z-50" : "hover:ring-2 hover:ring-primary/40 ring-inset",
+              module.isHidden && "opacity-40 grayscale-[0.5]"
             )}
           >
             {/* Admin Controls Overlay */}
+            <div className="absolute top-4 left-4 z-[60] flex gap-2">
+               {module.isHidden && (
+                 <div className="bg-amber-500 text-white text-[9px] font-black px-4 py-2 rounded-full shadow-2xl flex items-center gap-2 animate-pulse">
+                    <Eye size={12}/> DRAFT / HIDDEN
+                 </div>
+               )}
+            </div>
+
             {isSelected && (
               <div className="absolute top-4 right-4 z-[60] flex gap-2">
                 <div className="bg-primary text-white text-[10px] font-black px-4 py-2 rounded-full shadow-2xl flex items-center gap-2">
