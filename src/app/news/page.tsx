@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { SubpageHero } from '@/components/SubpageHero';
 import { motion } from 'motion/react';
