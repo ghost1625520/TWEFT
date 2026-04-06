@@ -22,7 +22,7 @@ const navItems = [
     href: '/about',
     submenu: [
       { name: '協會介紹', href: '/about' },
-      { name: '國際連結', href: '/about#international' },
+      { name: '國際連結', href: '/international' },
       { name: '聯絡我們', href: '/contact' },
       { name: '常見問題', href: '/faq' },
     ]

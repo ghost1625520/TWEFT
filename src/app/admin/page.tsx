@@ -42,14 +42,20 @@ import { ModuleRenderer, type ModuleData, type ModuleType } from '@/components/M
 export default function AdminDashboard() {
   const { profile } = useAuth();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const [activeTab, setActiveTab] = useState('cms');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [viewMode, setViewMode] = useState<'edit' | 'preview'>('edit');
   const [searchQuery, setSearchQuery] = useState('');
+  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
   
   const [siteData, setSiteData] = useState<{ [key: string]: ModuleData[] }>({});
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [currentPage, setCurrentPage] = useState('home');
+
+  const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3500);
+  };
   const pageModules = siteData[currentPage] || [];
 
   // --- COLLECTION STATE ---
@@ -173,11 +179,11 @@ export default function AdminDashboard() {
 
       if (dbErr) throw dbErr;
       
-      alert('檔案上傳成功並已記錄至資料庫！');
+      showToast('檔案上傳成功並已記錄至資料庫！');
       fetchGlobalData();
     } catch (err) {
       console.error('Error uploading file:', err);
-      alert('上傳失敗，請檢查儲存空間或權限。');
+      showToast('上傳失敗，請檢查儲存空間或權限。', 'error');
     } finally {
       setLoading(false);
     }
@@ -250,13 +256,14 @@ export default function AdminDashboard() {
   );
 
   const tabs = [
+    { id: 'dashboard', label: '總覽', icon: Monitor },
     { id: 'cms', label: '頁面編輯', icon: Layout },
-    { id: 'course_mgr', label: '課程大綱', icon: BookOpen },
+    { id: 'course_mgr', label: '課程管理', icon: BookOpen },
     { id: 'news_mgr', label: '消息管理', icon: List },
     { id: 'orders', label: '訂單審核', icon: ShoppingCart },
     { id: 'downloads', label: '資源管理', icon: Download },
     { id: 'users', label: '會員審核', icon: Users },
-    { id: 'settings', label: '權限設定', icon: ShieldCheck },
+    { id: 'settings', label: '系統設定', icon: ShieldCheck },
   ];
 
   const pagesMap = [
@@ -285,7 +292,16 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0A0A0B] flex flex-col pt-32 px-12 pb-20 text-white selection:bg-primary selection:text-white">
+    <div className="min-h-screen bg-[#0E1B22] flex flex-col pt-32 px-12 pb-20 text-white selection:bg-primary selection:text-white">
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed top-8 right-8 z-[200] px-8 py-4 rounded-2xl font-bold text-sm shadow-2xl flex items-center gap-3 transition-all ${
+          toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+        }`}>
+          {toast.type === 'success' ? <CheckCircle2 size={18} /> : <X size={18} />}
+          {toast.msg}
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between mb-12">
         <div className="flex items-center gap-6">
@@ -395,6 +411,68 @@ export default function AdminDashboard() {
         <div className={activeTab === 'cms' ? "lg:col-span-3" : "lg:col-span-4"}>
             {viewMode === 'edit' ? (
                <AnimatePresence mode="wait">
+
+                  {/* ── DASHBOARD OVERVIEW ── */}
+                  {activeTab === 'dashboard' && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10">
+                      <div>
+                        <h2 className="text-4xl font-black">歡迎回來，{profile?.full_name || 'Admin'} 👋</h2>
+                        <p className="text-white/30 text-xs font-bold uppercase tracking-widest mt-2">twEFT Command Center — {new Date().toLocaleDateString('zh-TW')}</p>
+                      </div>
+                      {/* KPI Cards */}
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                        {[
+                          { label: '會員總數', value: users.length, sub: `待審核 ${users.filter(u => !u.is_verified).length} 人`, color: 'text-primary', bg: 'bg-primary/10 border-primary/20' },
+                          { label: '課程數', value: courses.length, sub: '已上架課程', color: 'text-accent', bg: 'bg-accent/10 border-accent/20' },
+                          { label: '未處理訂單', value: orders.filter((o: any) => o.status === 'pending').length || orders.length, sub: '需人工審核', color: 'text-yellow-400', bg: 'bg-yellow-500/10 border-yellow-500/20' },
+                          { label: '資源檔案', value: downloads.length, sub: '已上傳資源', color: 'text-green-400', bg: 'bg-green-500/10 border-green-500/20' },
+                        ].map((kpi, i) => (
+                          <div key={i} className={`p-8 rounded-[2rem] border ${kpi.bg} space-y-3`}>
+                            <p className="text-white/40 text-xs font-black uppercase tracking-widest">{kpi.label}</p>
+                            <p className={`text-5xl font-black ${kpi.color}`}>{kpi.value}</p>
+                            <p className="text-white/30 text-xs font-bold">{kpi.sub}</p>
+                          </div>
+                        ))}
+                      </div>
+                      {/* Quick Actions */}
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        {[
+                          { label: '新增消息', tab: 'news_mgr', icon: List },
+                          { label: '管理課程', tab: 'course_mgr', icon: BookOpen },
+                          { label: '審核會員', tab: 'users', icon: Users },
+                          { label: '上傳資源', tab: 'downloads', icon: Download },
+                        ].map((a, i) => (
+                          <button key={i} onClick={() => setActiveTab(a.tab)}
+                            className="p-6 bg-white/5 border border-white/8 rounded-[2rem] hover:border-primary hover:bg-primary/5 transition-all group flex flex-col gap-4">
+                            <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-white/40 group-hover:bg-primary group-hover:text-white transition-all">
+                              <a.icon size={20} />
+                            </div>
+                            <span className="text-sm font-black text-white/60 group-hover:text-white transition-colors text-left">{a.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                      {/* Recent Orders */}
+                      <div className="bg-white/5 border border-white/5 rounded-[2.5rem] p-8 space-y-6">
+                        <h3 className="text-sm font-black text-white/40 uppercase tracking-widest">最新訂單紀錄</h3>
+                        {orders.length === 0 ? (
+                          <p className="text-white/20 text-xs font-bold text-center py-8">目前尚無訂單</p>
+                        ) : (
+                          <div className="space-y-3">
+                            {orders.slice(0, 5).map((ord: any, i: number) => (
+                              <div key={i} className="flex items-center justify-between p-5 bg-white/5 rounded-2xl">
+                                <div>
+                                  <p className="font-bold text-white text-sm">{ord.user_name || '未知用戶'}</p>
+                                  <p className="text-xs text-white/30">{ord.item_name}</p>
+                                </div>
+                                <span className="text-primary font-black text-sm">{ord.amount}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+
                   {activeTab === 'cms' && (
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8">
                        <div className="flex items-center justify-between p-6 bg-white/5 border border-white/5 rounded-[2.5rem]">
