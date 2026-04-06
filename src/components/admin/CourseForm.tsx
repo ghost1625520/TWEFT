@@ -48,7 +48,7 @@ export default function CourseForm({ initialData, onSave, onCancel, loading }: C
   const handleUpdateField = (field: 'syllabus' | 'highlights', index: number, value: string) => {
     const newList = [...formData[field]];
     newList[index] = value;
-    setFormData(prev => ({ ...prev, [field]: newList }));
+    setFormData((prev: any) => ({ ...prev, [field]: newList }));
   };
 
   const handleRemoveField = (field: 'syllabus' | 'highlights', index: number) => {
