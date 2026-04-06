@@ -37,6 +37,7 @@ import {
   Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
 import { ModuleRenderer, type ModuleData, type ModuleType } from '@/components/ModuleRenderer';
 
 // --- NEW ADMIN COMPONENTS ---
@@ -91,12 +92,15 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [currentPage, setCurrentPage] = useState('home');
+  const [selectedModuleId, setSelectedModuleId] = useState<string | number | null>(null);
+  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
 
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3500);
   };
   const pageModules = siteData[currentPage] || INITIAL_LAYOUTS[currentPage] || [];
+  const selectedModule = pageModules.find(m => m.id === selectedModuleId);
 
   // --- COLLECTION STATE ---
   const [courses, setCourses] = useState<any[]>([]);
@@ -113,6 +117,16 @@ export default function AdminDashboard() {
     fetchPageData(currentPage);
     fetchGlobalData();
   }, [currentPage]);
+
+  // Scroll to selected module in simulator
+  useEffect(() => {
+    if (selectedModuleId) {
+      const element = document.getElementById(`preview-${selectedModuleId}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [selectedModuleId]);
 
   const fetchGlobalData = async () => {
     try {
@@ -304,14 +318,17 @@ export default function AdminDashboard() {
     setSiteData({ ...siteData, [currentPage]: [...pageModules, newModule] });
   };
 
-  const updateModule = (index: number, data: Partial<ModuleData>) => {
+  const updateModule = (id: string | number, data: Partial<ModuleData>) => {
     const newModules = [...pageModules];
+    const index = newModules.findIndex(m => m.id === id);
+    if (index === -1) return;
     newModules[index] = { ...newModules[index], ...data };
     setSiteData({ ...siteData, [currentPage]: newModules });
   };
 
   const removeModule = (id: string | number) => {
     setSiteData({ ...siteData, [currentPage]: pageModules.filter(m => m.id !== id) });
+    if (selectedModuleId === id) setSelectedModuleId(null);
   };
 
   const moveModule = (index: number, direction: 'up' | 'down') => {
@@ -473,29 +490,131 @@ export default function AdminDashboard() {
                 )}
 
                 {activeTab === 'cms' && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-                    {pageModules.map((m, i) => (
-                      <div key={m.id} className="p-10 bg-white/5 border border-white/5 rounded-[3rem] relative group hover:border-primary/30 transition-all">
-                         <div className="absolute top-10 right-10 flex gap-2">
-                            <button onClick={()=>moveModule(i, 'up')} className="p-2 bg-white/5 rounded-lg text-white/20 hover:text-white"><MoveUp size={16}/></button>
-                            <button onClick={()=>moveModule(i, 'down')} className="p-2 bg-white/5 rounded-lg text-white/20 hover:text-white"><MoveDown size={16}/></button>
-                            <button onClick={()=>removeModule(m.id)} className="p-2 bg-red-500/10 rounded-lg text-red-500 hover:bg-red-500 hover:text-white"><Trash2 size={16}/></button>
-                         </div>
-                         <div className="flex gap-8 items-start">
-                            <div className="w-16 h-16 bg-white/5 rounded-3xl flex items-center justify-center text-primary border border-white/10 shadow-2xl">
-                               <Layout size={32}/>
-                            </div>
-                            <div className="flex-grow space-y-4">
-                               <div>
-                                  <h4 className="text-3xl font-black text-white">{m.title || '無標題'}</h4>
-                                  <p className="text-sm font-bold text-primary/40 uppercase tracking-widest">{m.type} • {m.background || 'default'}</p>
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex h-[calc(100vh-280px)] -mx-12 -mb-20 overflow-hidden border-t border-white/5 bg-[#0A1211]">
+                    {/* CMS Left Sidebar: Structure & Navigation */}
+                    <div className="w-80 bg-[#0E1B22] border-r border-white/5 flex flex-col pt-8">
+                       <div className="px-8 mb-8">
+                          <h3 className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] mb-4">目標頁面</h3>
+                          <select 
+                             className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl text-xs font-black text-white outline-none focus:border-primary appearance-none"
+                             value={currentPage}
+                             onChange={(e) => {
+                                setCurrentPage(e.target.value);
+                                setSelectedModuleId(null);
+                             }}
+                          >
+                             {pagesMap.map(p => (
+                               <option key={p.id} value={p.id} className="bg-dark">{p.label}</option>
+                             ))}
+                          </select>
+                       </div>
+
+                       <div className="flex-grow overflow-y-auto px-6 custom-scrollbar space-y-2">
+                          <h3 className="px-2 text-[10px] font-black text-white/20 uppercase tracking-[0.4em] mb-4">版塊結構</h3>
+                          {pageModules.map((m, i) => (
+                            <div 
+                               key={m.id} 
+                               onClick={() => setSelectedModuleId(m.id)}
+                               className={cn(
+                                  "group flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all",
+                                  selectedModuleId === m.id ? "bg-primary text-white shadow-xl shadow-primary/20 scale-[1.02]" : "bg-white/5 text-white/40 hover:bg-white/10"
+                               )}
+                            >
+                               <div className="flex items-center gap-4">
+                                  <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", selectedModuleId === m.id ? "bg-white/20" : "bg-primary/20 text-primary")}>
+                                     <Layout size={14}/>
+                                  </div>
+                                  <span className="text-[11px] font-black tracking-tight">{m.title || m.type}</span>
                                </div>
-                               <button onClick={()=>setEditItem({ ...m, index: i, type: 'cms_module' })} className="px-6 py-2 bg-white/5 hover:bg-primary hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">編輯數據詳情</button>
+                               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button onClick={(e) => { e.stopPropagation(); moveModule(i, 'up'); }} className="p-1.5 hover:text-white"><MoveUp size={12}/></button>
+                                  <button onClick={(e) => { e.stopPropagation(); moveModule(i, 'down'); }} className="p-1.5 hover:text-white"><MoveDown size={12}/></button>
+                                  <button onClick={(e) => { e.stopPropagation(); removeModule(m.id); }} className="p-1.5 hover:text-red-400"><Trash2 size={12}/></button>
+                               </div>
                             </div>
-                         </div>
-                      </div>
-                    ))}
-                    <button onClick={()=>addModule('HeroSlider')} className="w-full py-20 border-4 border-dashed border-white/5 rounded-[4rem] text-white/20 font-black text-xl hover:border-primary hover:text-primary transition-all">+ 添加新版塊</button>
+                          ))}
+                          <button 
+                             onClick={() => addModule('HeroSlider')}
+                             className="w-full py-4 mt-6 border-2 border-dashed border-white/5 rounded-2xl text-[10px] font-black text-white/20 hover:border-primary/40 hover:text-primary transition-all uppercase tracking-widest"
+                          >
+                             + 添加版塊模組
+                          </button>
+                       </div>
+                    </div>
+
+                    {/* CMS Center: Live Interactive Simulator */}
+                    <div className="flex-grow flex flex-col bg-[#050B0A] relative overflow-hidden">
+                       <div className="p-6 border-b border-white/5 flex items-center justify-between bg-dark/20 backdrop-blur-3xl z-40">
+                          <div className="flex items-center bg-white/5 rounded-2xl p-1 border border-white/5">
+                             <button onClick={() => setPreviewDevice('desktop')} className={cn("p-2 rounded-xl transition-all", previewDevice === 'desktop' ? "bg-white text-dark shadow-xl" : "text-white/40 hover:text-white")}><Monitor size={18}/></button>
+                             <button onClick={() => setPreviewDevice('mobile')} className={cn("p-2 rounded-xl transition-all", previewDevice === 'mobile' ? "bg-white text-dark shadow-xl" : "text-white/40 hover:text-white")}><Smartphone size={18}/></button>
+                          </div>
+                          <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">Live CMS Simulator v2.0</div>
+                          <div className="text-accent text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                             <div className="w-2 h-2 bg-accent rounded-full animate-pulse"/> 所見即所得模式
+                          </div>
+                       </div>
+
+                       <div className="flex-grow p-12 flex justify-center items-start overflow-y-auto custom-scrollbar">
+                          <motion.div 
+                             layout
+                             className={cn(
+                                "bg-white rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.5)] border-[12px] border-dark overflow-hidden transition-all duration-500 origin-top",
+                                previewDevice === 'desktop' ? "w-full max-w-[1280px]" : "w-[390px] min-h-[844px]"
+                             )}
+                          >
+                             <ModuleRenderer 
+                                modules={pageModules} 
+                                isAdmin={true}
+                                selectedId={selectedModuleId}
+                                onSelect={(id) => setSelectedModuleId(id)}
+                             />
+                          </motion.div>
+                       </div>
+                    </div>
+
+                    {/* CMS Right Sidebar: Contextual Field Editor */}
+                    <div className="w-[450px] bg-[#0E1B22] border-l border-white/5 flex flex-col">
+                       {selectedModule ? (
+                          <div className="h-full flex flex-col">
+                             <div className="p-8 border-b border-white/5 space-y-2">
+                                <div className="flex items-center justify-between">
+                                   <div className="w-12 h-12 bg-primary/20 text-primary rounded-2xl flex items-center justify-center shadow-lg"><Layout size={24}/></div>
+                                   <button onClick={() => setSelectedModuleId(null)} className="p-3 bg-white/5 rounded-xl hover:text-red-400 transition-colors"><X size={18}/></button>
+                                </div>
+                                <div>
+                                   <h3 className="text-xl font-black text-white">版塊內容設定</h3>
+                                   <p className="text-[10px] font-black text-white/20 uppercase tracking-widest">Type: {selectedModule.type}</p>
+                                </div>
+                             </div>
+                             <div className="flex-grow overflow-y-auto p-10 custom-scrollbar pb-32">
+                                <ModuleEditor 
+                                   module={selectedModule} 
+                                   onChange={(data) => updateModule(selectedModuleId!, data)} 
+                                />
+                             </div>
+                          </div>
+                       ) : (
+                          <div className="h-full flex flex-col items-center justify-center p-12 text-center space-y-8 bg-[#0E1B22]">
+                             <div className="w-28 h-28 bg-white/5 border border-white/10 rounded-[3rem] flex items-center justify-center text-white/10 animate-pulse">
+                                <Layout size={56} />
+                             </div>
+                             <div className="space-y-4">
+                                <h3 className="text-2xl font-black text-white/30 tracking-tight">選擇一個版塊來編輯</h3>
+                                <p className="text-sm text-white/10 font-bold leading-relaxed max-w-[240px] mx-auto">
+                                   點擊左側列表或中間模擬視窗中的 內容，即可在此開啟即時編輯器
+                                </p>
+                             </div>
+                             <div className="grid grid-cols-2 gap-3 w-full pt-8">
+                                {moduleTemplates.slice(0, 4).map(m => (
+                                  <button key={m.type} onClick={() => addModule(m.type)} className="p-6 bg-white/5 border border-white/5 rounded-[2rem] text-[9px] font-black text-white/20 hover:bg-primary/20 hover:text-primary hover:border-primary/20 transition-all uppercase tracking-widest flex flex-col items-center gap-3">
+                                     <m.icon size={20} /> {m.label}
+                                  </button>
+                                ))}
+                             </div>
+                          </div>
+                       )}
+                    </div>
                   </motion.div>
                 )}
 

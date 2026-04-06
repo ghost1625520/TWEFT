@@ -252,25 +252,70 @@ const TextContentModule = ({ data }: { data: ModuleData }) => (
 
 // --- Main Renderer ---
 
-export function ModuleRenderer({ modules }: { modules: ModuleData[] }) {
+export function ModuleRenderer({ 
+  modules, 
+  isAdmin = false, 
+  selectedId, 
+  onSelect 
+}: { 
+  modules: ModuleData[];
+  isAdmin?: boolean;
+  selectedId?: string | number | null;
+  onSelect?: (id: string | number) => void;
+}) {
   if (!modules) return null;
   return (
     <div className="w-full">
       {modules.map((module) => {
-        switch (module.type) {
-          case 'Hero': return <HeroModule key={module.id} data={module} />;
-          case 'Features': return <FeaturesModule key={module.id} data={module} />;
-          case 'Stats': return <StatsModule key={module.id} data={module} />;
-          case 'FAQ': return <FAQModule key={module.id} data={module} />;
-          case 'VideoSection': return <VideoHeroModule key={module.id} data={module} />;
-          case 'PricingGrid': case 'CTA': return <PricingGridModule key={module.id} data={module} />;
-          case 'HeroSlider': return <HeroSliderModule key={module.id} data={module} />;
-          case 'ImageTextGrid': return <ImageTextGridModule key={module.id} data={module} />;
-          case 'MasonryGallery': return <MasonryGalleryModule key={module.id} data={module} />;
-          case 'Timeline': return <TimelineModule key={module.id} data={module} />;
-          case 'TextContent': return <TextContentModule key={module.id} data={module} />;
-          default: return <div key={module.id} className="py-20 bg-red-50 text-red-500 text-center font-bold">Unknown type: {module.type}</div>;
-        }
+        const isSelected = selectedId === module.id;
+        
+        const content = (() => {
+          switch (module.type) {
+            case 'Hero': return <HeroModule key={module.id} data={module} />;
+            case 'Features': return <FeaturesModule key={module.id} data={module} />;
+            case 'Stats': return <StatsModule key={module.id} data={module} />;
+            case 'FAQ': return <FAQModule key={module.id} data={module} />;
+            case 'VideoSection': return <VideoHeroModule key={module.id} data={module} />;
+            case 'PricingGrid': case 'CTA': return <PricingGridModule key={module.id} data={module} />;
+            case 'HeroSlider': return <HeroSliderModule key={module.id} data={module} />;
+            case 'ImageTextGrid': return <ImageTextGridModule key={module.id} data={module} />;
+            case 'MasonryGallery': return <MasonryGalleryModule key={module.id} data={module} />;
+            case 'Timeline': return <TimelineModule key={module.id} data={module} />;
+            case 'TextContent': return <TextContentModule key={module.id} data={module} />;
+            default: return <div key={module.id} className="py-20 bg-red-50 text-red-500 text-center font-bold">Unknown type: {module.type}</div>;
+          }
+        })();
+
+        if (!isAdmin) return content;
+
+        return (
+          <div 
+            key={module.id}
+            id={`preview-${module.id}`}
+            onClick={() => onSelect?.(module.id)}
+            className={cn(
+              "relative group cursor-pointer transition-all duration-300",
+              isSelected ? "ring-4 ring-primary ring-inset z-50" : "hover:ring-2 hover:ring-primary/40 ring-inset"
+            )}
+          >
+            {/* Admin Controls Overlay */}
+            {isSelected && (
+              <div className="absolute top-4 right-4 z-[60] flex gap-2">
+                <div className="bg-primary text-white text-[10px] font-black px-4 py-2 rounded-full shadow-2xl flex items-center gap-2">
+                   <Layout size={12}/> 正在編輯：{module.type}
+                </div>
+              </div>
+            )}
+            {!isSelected && (
+              <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity z-40 pointer-events-none flex items-center justify-center">
+                 <div className="bg-white/90 backdrop-blur-md text-dark text-[10px] font-black px-6 py-3 rounded-full shadow-xl">
+                    點擊以編輯此區塊
+                 </div>
+              </div>
+            )}
+            {content}
+          </div>
+        );
       })}
     </div>
   );
