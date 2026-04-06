@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { ModuleRenderer, type ModuleData } from '@/components/ModuleRenderer';
+import { CMS_DEFAULTS } from '@/lib/cms-defaults';
 
 const categories = ['學術論文', '臨床影音', '中文教材', '國際文獻', '工具清單'];
 
@@ -63,7 +64,12 @@ export default function ResourcesPage() {
         .eq('slug', 'resources')
         .single();
       
-      if (data && data.modules) setModules(data.modules);
+      if (data && data.modules) {
+        setModules(data.modules);
+      } else {
+        // Use universal defaults if DB is empty to allow "Edit Existing"
+        setModules(CMS_DEFAULTS['resources']);
+      }
     }
     fetchPage();
   }, []);

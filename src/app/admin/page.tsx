@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ModuleRenderer, type ModuleData, type ModuleType } from '@/components/ModuleRenderer';
+import { CMS_DEFAULTS } from '@/lib/cms-defaults';
 
 export default function AdminDashboard() {
   const { profile } = useAuth();
@@ -88,7 +89,8 @@ export default function AdminDashboard() {
       if (data) {
         setSiteData(prev => ({ ...prev, [slug]: data.modules }));
       } else {
-        setSiteData(prev => ({ ...prev, [slug]: prev[slug] || [] }));
+        // If no data exists in DB, load the default static content to allow "Edit Existing"
+        setSiteData(prev => ({ ...prev, [slug]: CMS_DEFAULTS[slug] || [] }));
       }
     } catch (err) {
       console.error('Error fetching page data:', err);

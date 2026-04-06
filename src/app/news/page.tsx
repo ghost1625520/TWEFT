@@ -14,6 +14,7 @@ import {
   Trophy
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { NEWS_DEFAULTS } from '@/lib/cms-defaults';
 
 const staticNewsItems = [
   {
@@ -61,11 +62,12 @@ export default function NewsPage() {
         if (data && data.length > 0) {
           setNews(data);
         } else {
-          setNews(staticNewsItems);
+          // Use universal defaults if DB is empty to allow "Edit Existing"
+          setNews(NEWS_DEFAULTS);
         }
       } catch (err) {
         console.error("Error fetching news:", err);
-        setNews(staticNewsItems);
+        setNews(NEWS_DEFAULTS);
       } finally {
         setLoading(false);
       }
