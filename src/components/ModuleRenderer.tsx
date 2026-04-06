@@ -17,7 +17,8 @@ import {
   Layout,
   MessageCircle,
   Clock,
-  ExternalLink
+  ExternalLink,
+  Globe
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -31,6 +32,7 @@ export type ModuleType =
   | 'CTA' 
   | 'VideoSection' 
   | 'HeroSlider' 
+  | 'SubpageHero'
   | 'ImageTextGrid' 
   | 'MasonryGallery' 
   | 'Timeline' 
@@ -52,6 +54,60 @@ export interface ModuleData {
 }
 
 // --- Module Components ---
+
+const SubpageHeroModule = ({ data }: { data: ModuleData }) => (
+  <section className="relative py-24 bg-slate-50 overflow-hidden">
+    <div className="absolute top-0 right-0 w-1/3 h-full bg-primary/5 -skew-x-12 translate-x-1/2" />
+    <div className="container mx-auto px-6 relative z-10">
+      <div className="max-w-3xl space-y-4">
+        <motion.span initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} className="text-primary font-black uppercase tracking-[0.4em] text-[10px]">{data.subtitle}</motion.span>
+        <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-dark">{data.title}</h1>
+        <p className="text-lg text-slate-500 font-medium leading-relaxed max-w-xl">{data.content}</p>
+      </div>
+    </div>
+  </section>
+);
+
+const FacultyGridModule = ({ data }: { data: ModuleData }) => (
+  <section className="py-24 bg-white">
+    <div className="container mx-auto px-6">
+       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
+          {(data.items || []).map((member: any, i: number) => (
+            <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="group relative">
+               <div className="relative aspect-[3/4] rounded-[2.5rem] overflow-hidden mb-6 shadow-xl">
+                  <Image src={member.image || "https://images.unsplash.com/photo-1559839734-2b71f1e598de"} alt={member.name} fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-dark/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+               </div>
+               <div className="space-y-1 text-center">
+                  <h4 className="text-xl font-black text-dark">{member.name || '專家姓名'}</h4>
+                  <p className="text-xs font-bold text-primary uppercase tracking-widest">{member.title || '認證督導'}</p>
+                  <p className="text-xs text-slate-400 font-medium px-4 pt-2 line-clamp-2">{member.bio || '致力於 EFT 推廣與臨床教學多年。'}</p>
+               </div>
+            </motion.div>
+          ))}
+       </div>
+    </div>
+  </section>
+);
+
+const LogoCloudModule = ({ data }: { data: ModuleData }) => (
+  <section className="py-20 bg-slate-50 border-y border-slate-100">
+    <div className="container mx-auto px-6">
+       <div className="text-center mb-12 space-y-2">
+          <h3 className="text-[10px] font-black text-primary uppercase tracking-[0.4em]">{data.subtitle || 'Global Network'}</h3>
+          <h2 className="text-3xl font-black text-dark">{data.title || '國際合作夥伴'}</h2>
+       </div>
+       <div className="flex flex-wrap items-center justify-center gap-12 md:gap-20 opacity-40 grayscale hover:grayscale-0 transition-all">
+          {(data.items || ['ICEEFT', 'EFT-Asia', 'EFT-C', 'EFT-UK']).map((logo: any, i: number) => (
+             <div key={i} className="flex items-center gap-3 font-black text-2xl tracking-tighter text-slate-400">
+                <Globe size={24} className="text-slate-300" />
+                {typeof logo === 'string' ? logo : logo.name}
+             </div>
+          ))}
+       </div>
+    </div>
+  </section>
+);
 
 const HeroModule = ({ data }: { data: ModuleData }) => (
   <section className={cn(
@@ -272,6 +328,7 @@ export function ModuleRenderer({
         const content = (() => {
           switch (module.type) {
             case 'Hero': return <HeroModule key={module.id} data={module} />;
+            case 'SubpageHero': return <SubpageHeroModule key={module.id} data={module} />;
             case 'Features': return <FeaturesModule key={module.id} data={module} />;
             case 'Stats': return <StatsModule key={module.id} data={module} />;
             case 'FAQ': return <FAQModule key={module.id} data={module} />;
@@ -282,6 +339,8 @@ export function ModuleRenderer({
             case 'MasonryGallery': return <MasonryGalleryModule key={module.id} data={module} />;
             case 'Timeline': return <TimelineModule key={module.id} data={module} />;
             case 'TextContent': return <TextContentModule key={module.id} data={module} />;
+            case 'FacultyGrid': return <FacultyGridModule key={module.id} data={module} />;
+            case 'LogoCloud': return <LogoCloudModule key={module.id} data={module} />;
             default: return <div key={module.id} className="py-20 bg-red-50 text-red-500 text-center font-bold">Unknown type: {module.type}</div>;
           }
         })();

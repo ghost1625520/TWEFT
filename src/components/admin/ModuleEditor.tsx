@@ -85,11 +85,97 @@ export default function ModuleEditor({ module, onChange }: ModuleEditorProps) {
             <button onClick={() => addItem({ title: '新項目', description: '描述文字內容...' })} className="w-full py-4 border-2 border-dashed border-white/5 rounded-[2rem] text-xs font-black text-white/20 hover:border-primary/40 hover:text-primary transition-all">+ 新增功能/時序項</button>
           </div>
         );
+      case 'FacultyGrid':
+        return (
+          <div className="space-y-4">
+            {(module.items || []).map((item: any, i: number) => (
+              <div key={i} className="space-y-4 bg-white/5 p-6 rounded-[2rem] border border-white/5 relative group">
+                <div className="absolute right-4 top-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => moveItem(i, 'up')} className="p-2 bg-black/40 rounded-lg text-white/40 hover:text-white"><MoveUp size={14}/></button>
+                  <button onClick={() => moveItem(i, 'down')} className="p-2 bg-black/40 rounded-lg text-white/40 hover:text-white"><MoveDown size={14}/></button>
+                  <button onClick={() => removeItem(i)} className="p-2 bg-red-500/10 rounded-lg text-red-500 hover:bg-red-500 hover:text-white transition-all"><Trash2 size={14}/></button>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black text-white/20 uppercase tracking-widest">專家姓名</label>
+                    <input className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-primary outline-none" 
+                      value={item.name || ''} onChange={(e) => updateItem(i, { name: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black text-white/20 uppercase tracking-widest">職稱/頭銜</label>
+                    <input className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-primary outline-none" 
+                      value={item.title || ''} onChange={(e) => updateItem(i, { title: e.target.value })} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-white/20 uppercase tracking-widest">大頭照 URL</label>
+                  <input className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-primary outline-none" 
+                    value={item.image || ''} onChange={(e) => updateItem(i, { image: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-white/20 uppercase tracking-widest">個人簡介 (Bio)</label>
+                  <textarea rows={2} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-primary outline-none" 
+                    value={item.bio || ''} onChange={(e) => updateItem(i, { bio: e.target.value })} />
+                </div>
+              </div>
+            ))}
+            <button onClick={() => addItem({ name: '新專家', title: '認證導師', bio: '簡介文字...', image: '' })} className="w-full py-4 border-2 border-dashed border-white/5 rounded-[2rem] text-xs font-black text-white/20 hover:border-primary/40 hover:text-primary transition-all">+ 新增團隊成員</button>
+          </div>
+        );
+      case 'LogoCloud':
+        return (
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              {(module.items || []).map((item: any, i: number) => (
+                <div key={i} className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/5">
+                   <input className="bg-transparent text-[10px] font-black text-white outline-none focus:text-primary" 
+                     value={typeof item === 'string' ? item : item.name} 
+                     onChange={(e) => updateItem(i, typeof item === 'string' ? e.target.value : { name: e.target.value })} />
+                   <button onClick={() => removeItem(i)} className="text-white/20 hover:text-red-500"><Trash2 size={10}/></button>
+                </div>
+              ))}
+            </div>
+            <button onClick={() => addItem('NEW PARTNER')} className="w-full py-3 border-2 border-dashed border-white/5 rounded-2xl text-xs font-black text-white/20 hover:border-primary/40 hover:text-primary transition-all">+ 新增合作組織</button>
+          </div>
+        );
+      case 'ImageTextGrid':
+        return (
+          <div className="space-y-4">
+            {(module.items || []).map((item: any, i: number) => (
+              <div key={i} className="space-y-4 bg-white/5 p-6 rounded-[2rem] border border-white/5 relative group">
+                <div className="absolute right-4 top-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => moveItem(i, 'up')} className="p-2 bg-black/40 rounded-lg text-white/40 hover:text-white"><MoveUp size={14}/></button>
+                  <button onClick={() => moveItem(i, 'down')} className="p-2 bg-black/40 rounded-lg text-white/40 hover:text-white"><MoveDown size={14}/></button>
+                  <button onClick={() => removeItem(i)} className="p-2 bg-red-500/10 rounded-lg text-red-500 hover:bg-red-500 hover:text-white transition-all"><Trash2 size={14}/></button>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-white/20 uppercase tracking-widest">區塊標題</label>
+                  <input className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-primary outline-none" 
+                    value={item.title || ''} onChange={(e) => updateItem(i, { title: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-white/20 uppercase tracking-widest">圖片 URL</label>
+                  <input className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-primary outline-none" 
+                    value={item.image || ''} onChange={(e) => updateItem(i, { image: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-white/20 uppercase tracking-widest">描述內容</label>
+                  <textarea rows={2} className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-primary outline-none" 
+                    value={item.description || ''} onChange={(e) => updateItem(i, { description: e.target.value })} />
+                </div>
+              </div>
+            ))}
+            <button onClick={() => addItem({ title: '新圖文區塊', description: '描述文字...', image: '' })} className="w-full py-4 border-2 border-dashed border-white/5 rounded-[2rem] text-xs font-black text-white/20 hover:border-primary/40 hover:text-primary transition-all">+ 新增圖文內容</button>
+          </div>
+        );
       case 'PricingGrid':
         return (
           <div className="space-y-4">
             {(module.items || []).map((item: any, i: number) => (
-              <div key={i} className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white/5 p-6 rounded-[2rem] border border-white/5">
+              <div key={i} className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white/5 p-6 rounded-[2rem] border border-white/5 relative group">
+                <div className="absolute right-4 top-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => removeItem(i)} className="p-2 bg-red-500/10 rounded-lg text-red-500 hover:bg-red-500 hover:text-white transition-all"><Trash2 size={14}/></button>
+                </div>
                 <div className="space-y-2">
                   <label className="text-[9px] font-black text-white/20 uppercase tracking-widest">方案標題</label>
                   <input className="w-full bg-black/20 border border-white/10 rounded-xl px-5 py-3 text-sm text-white focus:border-primary outline-none" 
@@ -102,11 +188,8 @@ export default function ModuleEditor({ module, onChange }: ModuleEditorProps) {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[9px] font-black text-white/20 uppercase tracking-widest">簡短描述</label>
-                  <div className="flex gap-2">
-                    <input className="flex-grow bg-black/20 border border-white/10 rounded-xl px-5 py-3 text-sm focus:border-primary outline-none" 
-                      value={item.description || ''} onChange={(e) => updateItem(i, { description: e.target.value })} />
-                    <button onClick={() => removeItem(i)} className="p-3 text-red-500/40 hover:text-red-500"><Trash2 size={16}/></button>
-                  </div>
+                  <input className="w-full bg-black/20 border border-white/10 rounded-xl px-5 py-3 text-sm focus:border-primary outline-none" 
+                    value={item.description || ''} onChange={(e) => updateItem(i, { description: e.target.value })} />
                 </div>
               </div>
             ))}

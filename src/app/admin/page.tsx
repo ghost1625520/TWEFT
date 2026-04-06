@@ -34,7 +34,8 @@ import {
   Clock,
   MessageCircle,
   ArrowRight,
-  Download
+  Download,
+  Globe
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -59,9 +60,21 @@ const INITIAL_LAYOUTS: { [key: string]: ModuleData[] } = {
     { id: 'eft1', type: 'HeroSlider', title: '看見情緒背後的依附訊息', subtitle: 'What is EFT?', content: '情緒焦點治療 (EFT) 是一套結合人本主義與依附理論的短期治療方式，廣泛應用於個人、伴侶及家庭諮商。它能幫助我們在情緒混亂中，找到安全感的出口。', background: 'primary-light' },
     { id: 'eft2', type: 'Features', title: 'EFT 的核心重點', items: [{title: '情緒就是能量', description: '情緒並非干擾，而是引導改變的主要動力'}, {title: '修復依附連結', description: '處理深刻的核心依賴需求，建立安全感'}, {title: '改變循環脈絡', description: '打破重複的負向互動與防衛機制'}] }
   ],
+  news: [
+      { id: 'n1', type: 'SubpageHero', title: '協會最新動態', subtitle: 'News & Events', content: '掌握 EFT 在台灣的最新課程、講座與學術交流活動。', background: 'slate' },
+      { id: 'n2', type: 'TextContent', title: '關於最新消息', content: '此頁面內容將由消息管理系統自動同步。' }
+  ],
+  faculty: [
+    { id: 'f1', type: 'SubpageHero', title: '專業師資與督導團隊', subtitle: 'Our Experts', content: 'twEFT 匯集了經由 ICEEFT 認證的資深督導員與治療師，提供最紮實的培訓背景。', background: 'primary-light' },
+    { id: 'f2', type: 'FacultyGrid', items: [
+      { name: '劉婷 博士', title: 'ICEEFT 認證督導/訓練員', image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2', bio: 'twEFT 創辦人，致力於將 EFT 引進亞洲華人圈。' },
+      { name: '專家老師 A', title: '認證督導', image: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df', bio: '專長於伴侶治療與家庭系統。' },
+      { name: '專家老師 B', title: '認證治療師', image: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f', bio: '深耕個人情緒轉化與心理學研究。' }
+    ]}
+  ],
   international: [
     { id: 'int1', type: 'HeroSlider', title: '接軌國際：ICEEFT 全球聯盟', subtitle: 'Global Partnership', content: 'twEFT 與加拿大 ICEEFT 緊密連結，確保台灣的培訓品質符合全球統一的高標準認證體系。', background: 'dark' },
-    { id: 'int2', type: 'Features', title: '國際合作夥伴', items: [{title: 'ICEEFT', description: '加拿大國際情緒焦點治療中心'}, {title: 'Regional Networks', description: '與全球 80+ 地區分會進行學術交流'}] }
+    { id: 'int2', type: 'LogoCloud', title: '全球合作組織', subtitle: 'ICEEFT Affiliates', items: ['ICEEFT Canada', 'EFT Tennessee', 'EFT Hong Kong', 'EFT China', 'EFT Korea'] }
   ],
   membership: [
     { id: 'm1', type: 'HeroSlider', title: '專業之路，與你同行', subtitle: 'Membership Plans', content: '加入 twEFT，享受國際級電子通訊報、專業課程優惠以及社群同儕支持。', background: 'slate' },
@@ -109,6 +122,24 @@ export default function AdminDashboard() {
   const [downloads, setDownloads] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [editItem, setEditItem] = useState<any>(null);
+
+  // --- SCALING ENGINE ---
+  const [simulatorWidth, setSimulatorWidth] = useState(1200);
+  const workspaceRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        setSimulatorWidth(entry.contentRect.width);
+      }
+    });
+    if (workspaceRef.current) observer.observe(workspaceRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  const baseWidth = previewDevice === 'desktop' ? 1280 : 390;
+  const padding = 64; // p-8 * 2
+  const scale = Math.min(1, (simulatorWidth - padding) / baseWidth);
 
 
 
@@ -364,13 +395,17 @@ export default function AdminDashboard() {
   ];
 
   const moduleTemplates: { type: ModuleType; label: string; icon: any }[] = [
-    { type: 'HeroSlider', label: '大氣輪播', icon: Monitor },
-    { type: 'ImageTextGrid', label: '圖文排列', icon: Layout },
-    { type: 'Features', label: '功能特性', icon: Zap },
-    { type: 'Stats', label: '數據統計', icon: CheckCircle2 },
-    { type: 'Timeline', label: '發展時序', icon: Clock },
-    { type: 'PricingGrid', label: '方案報價', icon: CreditCard },
-    { type: 'FAQ', label: '常見問題', icon: MessageCircle }
+    { type: 'HeroSlider', label: '主要大氣輪播', icon: Monitor },
+    { type: 'SubpageHero', label: '內頁標題區', icon: Layout },
+    { type: 'TextContent', label: '純文字內文', icon: Type },
+    { type: 'Features', label: '功能特性列表', icon: Zap },
+    { type: 'Stats', label: '數據統計框', icon: CheckCircle2 },
+    { type: 'ImageTextGrid', label: '圖文錯綜排列', icon: Layout },
+    { type: 'FacultyGrid', label: '師資團隊網格', icon: Users },
+    { type: 'LogoCloud', label: '夥伴標誌雲', icon: Globe },
+    { type: 'Timeline', label: '發展發展時序', icon: Clock },
+    { type: 'PricingGrid', label: '方案報價表格', icon: CreditCard },
+    { type: 'FAQ', label: '常見問題摺疊', icon: MessageCircle }
   ];
 
   return (
@@ -491,6 +526,7 @@ export default function AdminDashboard() {
 
                 {activeTab === 'cms' && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex h-[calc(100vh-280px)] -mx-12 -mb-20 overflow-hidden border-t border-white/5 bg-[#0A1211]">
+                    
                     {/* CMS Left Sidebar: Structure & Navigation */}
                     <div className="w-80 bg-[#0E1B22] border-r border-white/5 flex flex-col pt-8">
                        <div className="px-8 mb-8">
@@ -533,34 +569,35 @@ export default function AdminDashboard() {
                                </div>
                             </div>
                           ))}
-                          <button 
-                             onClick={() => addModule('HeroSlider')}
-                             className="w-full py-4 mt-6 border-2 border-dashed border-white/5 rounded-2xl text-[10px] font-black text-white/20 hover:border-primary/40 hover:text-primary transition-all uppercase tracking-widest"
-                          >
-                             + 添加版塊模組
-                          </button>
                        </div>
                     </div>
 
                     {/* CMS Center: Live Interactive Simulator */}
-                    <div className="flex-grow flex flex-col bg-[#050B0A] relative overflow-hidden">
+                    <div ref={workspaceRef} className="flex-grow flex flex-col bg-[#050B0A] relative overflow-hidden">
                        <div className="p-6 border-b border-white/5 flex items-center justify-between bg-dark/20 backdrop-blur-3xl z-40">
                           <div className="flex items-center bg-white/5 rounded-2xl p-1 border border-white/5">
                              <button onClick={() => setPreviewDevice('desktop')} className={cn("p-2 rounded-xl transition-all", previewDevice === 'desktop' ? "bg-white text-dark shadow-xl" : "text-white/40 hover:text-white")}><Monitor size={18}/></button>
                              <button onClick={() => setPreviewDevice('mobile')} className={cn("p-2 rounded-xl transition-all", previewDevice === 'mobile' ? "bg-white text-dark shadow-xl" : "text-white/40 hover:text-white")}><Smartphone size={18}/></button>
                           </div>
-                          <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">Live CMS Simulator v2.0</div>
-                          <div className="text-accent text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                             <div className="w-2 h-2 bg-accent rounded-full animate-pulse"/> 所見即所得模式
+                          <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">Live CMS Simulator v2.5</div>
+                          <div className="flex items-center gap-4">
+                             <div className="text-white/20 text-[9px] font-black">SCALE: {Math.round(scale * 100)}%</div>
+                             <div className="text-accent text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                                <div className="w-2 h-2 bg-accent rounded-full animate-pulse"/> 所見即所得模式
+                             </div>
                           </div>
                        </div>
 
-                       <div className="flex-grow p-12 flex justify-center items-start overflow-y-auto custom-scrollbar">
+                       <div className="flex-grow p-8 flex justify-center items-start overflow-y-auto custom-scrollbar bg-black">
                           <motion.div 
-                             layout
+                             animate={{ 
+                                scale, 
+                                width: baseWidth,
+                                height: previewDevice === 'mobile' ? 844 : 'auto'
+                             }}
+                             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                              className={cn(
                                 "bg-white rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.5)] border-[12px] border-dark overflow-hidden transition-all duration-500 origin-top",
-                                previewDevice === 'desktop' ? "w-full max-w-[1280px]" : "w-[390px] min-h-[844px]"
                              )}
                           >
                              <ModuleRenderer 
@@ -574,7 +611,7 @@ export default function AdminDashboard() {
                     </div>
 
                     {/* CMS Right Sidebar: Contextual Field Editor */}
-                    <div className="w-[450px] bg-[#0E1B22] border-l border-white/5 flex flex-col">
+                    <div className="w-[450px] bg-[#0E1B22] border-l border-white/5 flex flex-col shadow-2xl">
                        {selectedModule ? (
                           <div className="h-full flex flex-col">
                              <div className="p-8 border-b border-white/5 space-y-2">
@@ -595,22 +632,29 @@ export default function AdminDashboard() {
                              </div>
                           </div>
                        ) : (
-                          <div className="h-full flex flex-col items-center justify-center p-12 text-center space-y-8 bg-[#0E1B22]">
-                             <div className="w-28 h-28 bg-white/5 border border-white/10 rounded-[3rem] flex items-center justify-center text-white/10 animate-pulse">
-                                <Layout size={56} />
-                             </div>
-                             <div className="space-y-4">
-                                <h3 className="text-2xl font-black text-white/30 tracking-tight">選擇一個版塊來編輯</h3>
-                                <p className="text-sm text-white/10 font-bold leading-relaxed max-w-[240px] mx-auto">
-                                   點擊左側列表或中間模擬視窗中的 內容，即可在此開啟即時編輯器
+                          <div className="h-full flex flex-col p-12 overflow-y-auto custom-scrollbar">
+                             <div className="space-y-4 mb-10">
+                                <h3 className="text-2xl font-black text-white tracking-tight">版塊圖庫</h3>
+                                <p className="text-xs text-white/20 font-bold leading-relaxed">
+                                   點擊下方版塊類型，直接將新內容插入至目前的「{pagesMap.find(p=>p.id===currentPage)?.label}」頁面。
                                 </p>
                              </div>
-                             <div className="grid grid-cols-2 gap-3 w-full pt-8">
-                                {moduleTemplates.slice(0, 4).map(m => (
-                                  <button key={m.type} onClick={() => addModule(m.type)} className="p-6 bg-white/5 border border-white/5 rounded-[2rem] text-[9px] font-black text-white/20 hover:bg-primary/20 hover:text-primary hover:border-primary/20 transition-all uppercase tracking-widest flex flex-col items-center gap-3">
-                                     <m.icon size={20} /> {m.label}
+                             <div className="grid grid-cols-2 gap-4">
+                                {moduleTemplates.map(m => (
+                                  <button key={m.type} onClick={() => addModule(m.type)} className="p-6 bg-white/5 border border-white/5 rounded-[2.5rem] text-[10px] font-black text-white/40 hover:bg-primary/20 hover:text-primary hover:border-primary/20 transition-all uppercase tracking-widest flex flex-col items-center gap-4 group">
+                                     <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
+                                        <m.icon size={20} />
+                                     </div>
+                                     <span className="text-center leading-tight">{m.label}</span>
                                   </button>
                                 ))}
+                             </div>
+                             <div className="mt-auto pt-10 text-center">
+                                <div className="p-8 bg-primary/10 border border-primary/20 rounded-[3rem] space-y-4">
+                                   <Zap size={24} className="mx-auto text-primary" />
+                                   <p className="text-[10px] font-black text-primary uppercase tracking-widest">PRO TIP</p>
+                                   <p className="text-xs text-white/40 leading-relaxed">您可以直接點擊左側結構欄中的版塊進行拖曳排序，或點擊預覽區塊直接進行修改。</p>
+                                </div>
                              </div>
                           </div>
                        )}
