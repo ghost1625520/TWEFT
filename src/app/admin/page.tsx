@@ -569,6 +569,12 @@ export default function AdminDashboard() {
                                </div>
                             </div>
                           ))}
+                          {pageModules.length === 0 && (
+                             <div className="py-20 text-center space-y-4 px-4">
+                                <div className="w-16 h-16 bg-white/5 rounded-3xl flex items-center justify-center mx-auto text-white/10"><Layout size={32}/></div>
+                                <p className="text-[10px] font-black text-white/20 uppercase tracking-widest">目前尚無版塊<br/>請由右側圖庫新增</p>
+                             </div>
+                          )}
                        </div>
                     </div>
 
@@ -581,47 +587,67 @@ export default function AdminDashboard() {
                           </div>
                           <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">Live CMS Simulator v2.5</div>
                           <div className="flex items-center gap-4">
-                             <div className="text-white/20 text-[9px] font-black">SCALE: {Math.round(scale * 100)}%</div>
+                             <div className="text-white/20 text-[9px] font-black uppercase">Scale: {Math.round(scale * 100)}%</div>
                              <div className="text-accent text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                                <div className="w-2 h-2 bg-accent rounded-full animate-pulse"/> 所見即所得模式
+                                <div className="w-2 h-2 bg-accent rounded-full animate-pulse"/> 同步預覽中
                              </div>
                           </div>
                        </div>
 
-                       <div className="flex-grow p-8 flex justify-center items-start overflow-y-auto custom-scrollbar bg-black">
-                          <motion.div 
-                             animate={{ 
-                                scale, 
-                                width: baseWidth,
-                                height: previewDevice === 'mobile' ? 844 : 'auto'
+                       <div className="flex-grow p-10 flex justify-center items-start overflow-auto custom-scrollbar bg-black/50 relative">
+                          <div 
+                             style={{ 
+                                width: baseWidth * scale,
+                                height: 'max-content',
+                                transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
                              }}
-                             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                             className={cn(
-                                "bg-white rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.5)] border-[12px] border-dark overflow-hidden transition-all duration-500 origin-top",
-                             )}
+                             className="relative"
                           >
-                             <ModuleRenderer 
-                                modules={pageModules} 
-                                isAdmin={true}
-                                selectedId={selectedModuleId}
-                                onSelect={(id) => setSelectedModuleId(id)}
-                             />
-                          </motion.div>
+                             <motion.div 
+                                style={{ 
+                                   width: baseWidth,
+                                   transform: `scale(${scale})`,
+                                   transformOrigin: 'top left',
+                                   minWidth: baseWidth
+                                }}
+                                className={cn(
+                                   "bg-white shadow-[0_100px_200px_rgba(0,0,0,0.8)] border-[12px] border-dark overflow-hidden transition-all duration-500",
+                                   previewDevice === 'mobile' ? "rounded-[3.5rem]" : "rounded-3xl"
+                                )}
+                             >
+                                <div className={cn(
+                                  "h-full overflow-hidden",
+                                  previewDevice === 'mobile' ? "min-h-[844px]" : "min-h-[1000px]"
+                                )}>
+                                   <ModuleRenderer 
+                                      modules={pageModules} 
+                                      isAdmin={true}
+                                      selectedId={selectedModuleId}
+                                      onSelect={(id) => setSelectedModuleId(id)}
+                                   />
+                                </div>
+                             </motion.div>
+                          </div>
                        </div>
                     </div>
 
-                    {/* CMS Right Sidebar: Contextual Field Editor */}
-                    <div className="w-[450px] bg-[#0E1B22] border-l border-white/5 flex flex-col shadow-2xl">
+                    {/* CMS Right Sidebar: Field Editor or Gallery */}
+                    <div className="w-[450px] bg-[#0E1B22] border-l border-white/5 flex flex-col shadow-2xl relative z-50">
                        {selectedModule ? (
-                          <div className="h-full flex flex-col">
-                             <div className="p-8 border-b border-white/5 space-y-2">
+                          <div className="h-full flex flex-col animate-in fade-in slide-in-from-right-4 duration-300">
+                             <div className="p-8 border-b border-white/5 space-y-2 bg-dark/20 backdrop-blur-3xl">
                                 <div className="flex items-center justify-between">
-                                   <div className="w-12 h-12 bg-primary/20 text-primary rounded-2xl flex items-center justify-center shadow-lg"><Layout size={24}/></div>
-                                   <button onClick={() => setSelectedModuleId(null)} className="p-3 bg-white/5 rounded-xl hover:text-red-400 transition-colors"><X size={18}/></button>
+                                   <div className="w-12 h-12 bg-primary/20 text-primary rounded-2xl flex items-center justify-center shadow-lg border border-primary/20"><Layout size={24}/></div>
+                                   <button 
+                                      onClick={() => setSelectedModuleId(null)} 
+                                      className="p-3 bg-white/5 rounded-xl hover:bg-white/10 hover:text-red-400 transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/50"
+                                   >
+                                      <X size={14}/> 關閉編輯
+                                   </button>
                                 </div>
-                                <div>
+                                <div className="pt-4">
                                    <h3 className="text-xl font-black text-white">版塊內容設定</h3>
-                                   <p className="text-[10px] font-black text-white/20 uppercase tracking-widest">Type: {selectedModule.type}</p>
+                                   <p className="text-[10px] font-black text-primary uppercase tracking-widest mt-1">MODULE TYPE: {selectedModule.type}</p>
                                 </div>
                              </div>
                              <div className="flex-grow overflow-y-auto p-10 custom-scrollbar pb-32">
@@ -632,28 +658,39 @@ export default function AdminDashboard() {
                              </div>
                           </div>
                        ) : (
-                          <div className="h-full flex flex-col p-12 overflow-y-auto custom-scrollbar">
-                             <div className="space-y-4 mb-10">
-                                <h3 className="text-2xl font-black text-white tracking-tight">版塊圖庫</h3>
-                                <p className="text-xs text-white/20 font-bold leading-relaxed">
-                                   點擊下方版塊類型，直接將新內容插入至目前的「{pagesMap.find(p=>p.id===currentPage)?.label}」頁面。
+                          <div className="h-full flex flex-col animate-in fade-in duration-500">
+                             <div className="p-10 pb-6">
+                                <div className="px-5 py-2 bg-primary/20 text-primary border border-primary/20 rounded-full text-[10px] font-black uppercase tracking-[0.3em] w-fit mb-6">
+                                   Section Library
+                                </div>
+                                <h3 className="text-3xl font-black text-white tracking-tight mb-4">版塊組件庫</h3>
+                                <p className="text-xs text-white/30 font-bold leading-relaxed">
+                                   選擇下方版塊類型，直接將新內容插入至目前的「{pagesMap.find(p=>p.id===currentPage)?.label}」頁面。
                                 </p>
                              </div>
-                             <div className="grid grid-cols-2 gap-4">
-                                {moduleTemplates.map(m => (
-                                  <button key={m.type} onClick={() => addModule(m.type)} className="p-6 bg-white/5 border border-white/5 rounded-[2.5rem] text-[10px] font-black text-white/40 hover:bg-primary/20 hover:text-primary hover:border-primary/20 transition-all uppercase tracking-widest flex flex-col items-center gap-4 group">
-                                     <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
-                                        <m.icon size={20} />
-                                     </div>
-                                     <span className="text-center leading-tight">{m.label}</span>
-                                  </button>
-                                ))}
-                             </div>
-                             <div className="mt-auto pt-10 text-center">
-                                <div className="p-8 bg-primary/10 border border-primary/20 rounded-[3rem] space-y-4">
+                             <div className="flex-grow overflow-y-auto px-10 custom-scrollbar pb-10">
+                                <div className="grid grid-cols-2 gap-4">
+                                   {moduleTemplates.map(m => (
+                                     <button 
+                                       key={m.type} 
+                                       onClick={() => addModule(m.type)} 
+                                       className="p-6 bg-white/5 border border-white/5 rounded-[2.5rem] text-[10px] font-black text-white/40 hover:bg-primary/20 hover:text-primary hover:border-primary/20 transition-all uppercase tracking-[0.2em] flex flex-col items-center gap-4 group"
+                                     >
+                                        <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center group-hover:bg-primary group-hover:text-white group-hover:shadow-xl group-hover:shadow-primary/30 transition-all border border-white/5 group-hover:border-transparent">
+                                           <m.icon size={20} />
+                                        </div>
+                                        <span className="text-center leading-tight">{m.label}</span>
+                                     </button>
+                                   ))}
+                                </div>
+                                
+                                <div className="mt-12 p-8 bg-white/2 rounded-[2.5rem] border border-white/5 space-y-4 text-center">
                                    <Zap size={24} className="mx-auto text-primary" />
-                                   <p className="text-[10px] font-black text-primary uppercase tracking-widest">PRO TIP</p>
-                                   <p className="text-xs text-white/40 leading-relaxed">您可以直接點擊左側結構欄中的版塊進行拖曳排序，或點擊預覽區塊直接進行修改。</p>
+                                   <p className="text-[10px] font-black text-primary uppercase tracking-widest">使用小秘訣</p>
+                                   <p className="text-[10px] text-white/30 leading-relaxed font-bold">
+                                      點擊左側「版塊結構」可快速跳轉至該區。
+                                      滑鼠懸停在版塊上可直接點擊「編輯」進入內容設定。
+                                   </p>
                                 </div>
                              </div>
                           </div>
