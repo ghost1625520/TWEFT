@@ -44,6 +44,41 @@ import CourseForm from '@/components/admin/CourseForm';
 import NewsForm from '@/components/admin/NewsForm';
 import ModuleEditor from '@/components/admin/ModuleEditor';
 
+export const INITIAL_LAYOUTS: { [key: string]: ModuleData[] } = {
+  home: [
+    { id: 'h1', type: 'HeroSlider', title: '建立深層連結，重塑依附關係', subtitle: 'Emotionally Focused Therapy', content: '我們是「臺灣EFT治療學會」，致力於推廣情緒焦點治療 (EFT)，協助治療師與大眾建立更安全、更親密的關係。', background: 'dark' },
+    { id: 's1', type: 'Stats', items: [{label: '認證會員', value: '500+'}, {label: '國際督導', value: '20+'}, {label: '年度課程', value: '100+'}] },
+    { id: 'f1', type: 'Features', title: '核心發展亮點', items: [{title: '專業認證體系', description: '從初階到進階的完整認證路徑'}, {title: '國際師資與顧問', description: '媒合全球頂尖 EFT 專業見解'}, {title: '臨床培訓中心', description: '提供實務督導與專業團體支持'}] }
+  ],
+  about: [
+    { id: 'ab1', type: 'HeroSlider', title: '推廣愛與連結的專業社群', subtitle: 'Our Mission & Vision', content: '臺灣EFT治療學會 (twEFT) 是經由 ICEEFT 授權，在台灣推廣情緒焦點治療的專業組織。我們致力於培訓專業治療師，並在大眾中推廣健康的依附關係與情感連結。', background: 'slate' },
+    { id: 'ab2', type: 'Timeline', title: '協會發展里程碑', subtitle: 'Our History', items: [{title: '學會正式成立', description: '2013年由劉婷老師引進並正式創立學會'}, {title: '國際認證轉型', description: '正式取得 ICEEFT 在台教學與認證授權'}, {title: '邁向多元發展', description: '發展多樣化進階工作坊與專業督導社群'}] }
+  ],
+  'eft-intro': [
+    { id: 'eft1', type: 'HeroSlider', title: '看見情緒背後的依附訊息', subtitle: 'What is EFT?', content: '情緒焦點治療 (EFT) 是一套結合人本主義與依附理論的短期治療方式，廣泛應用於個人、伴侶及家庭諮商。它能幫助我們在情緒混亂中，找到安全感的出口。', background: 'primary-light' },
+    { id: 'eft2', type: 'Features', title: 'EFT 的核心重點', items: [{title: '情緒就是能量', description: '情緒並非干擾，而是引導改變的主要動力'}, {title: '修復依附連結', description: '處理深刻的核心依賴需求，建立安全感'}, {title: '改變循環脈絡', description: '打破重複的負向互動與防衛機制'}] }
+  ],
+  international: [
+    { id: 'int1', type: 'HeroSlider', title: '接軌國際：ICEEFT 全球聯盟', subtitle: 'Global Partnership', content: 'twEFT 與加拿大 ICEEFT 緊密連結，確保台灣的培訓品質符合全球統一的高標準認證體系。', background: 'dark' },
+    { id: 'int2', type: 'Features', title: '國際合作夥伴', items: [{title: 'ICEEFT', description: '加拿大國際情緒焦點治療中心'}, {title: 'Regional Networks', description: '與全球 80+ 地區分會進行學術交流'}] }
+  ],
+  membership: [
+    { id: 'm1', type: 'HeroSlider', title: '專業之路，與你同行', subtitle: 'Membership Plans', content: '加入 twEFT，享受國際級電子通訊報、專業課程優惠以及社群同儕支持。', background: 'slate' },
+    { id: 'm2', type: 'PricingGrid', title: '年度會員方案', items: [{title: '專業會員', price: 'NT$ 2,000/年', description: '適用於心理師、輔導老師相關領域工作者'}, {title: '一般會員', price: 'NT$ 1,500/年', description: '適用於對 EFT 有興趣之相關人士'}, {title: '學生會員', price: 'NT$ 1,000/年', description: '需提供在學相關證明'}] }
+  ],
+  contact: [
+    { id: 'c1', type: 'HeroSlider', title: '持續性的專業對話', subtitle: 'Get in Touch', content: '如果您有任何課程、合作或入會需求，請隨時與我們秘書處聯繫。', background: 'dark' },
+    { id: 'c2', type: 'ImageTextGrid', title: '協會辦事處', subtitle: 'Office Info', content: '服務時間：週一至週五 09:30 - 17:30。電話：(02) ****-**** 信箱：secretary@tweft.org.tw' }
+  ],
+  resources: [
+    { id: 'r1', type: 'HeroSlider', title: '深化學習：專業文獻與資源', subtitle: 'Resource Hub', content: '這裡收集了 EFT 的學術研究、臨床工具手冊與相關中文化量表。', background: 'slate' },
+    { id: 'r2', type: 'Features', title: '精選下載資源', items: [{title: '伴侶治療效能研究', description: '2024 中文譯本'}, {title: '依附風格評估表', description: '臨床實務使用參考'}] }
+  ],
+  courses: [
+      { id: 'co1', type: 'HeroSlider', title: '系統化的專業認證路徑', subtitle: 'LMS & Training', content: '從初階 Externship 到專題工作坊，我們提供完整的專業成長地圖。', background: 'dark' }
+  ]
+};
+
 export default function AdminDashboard() {
   const { profile } = useAuth();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -61,7 +96,7 @@ export default function AdminDashboard() {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3500);
   };
-  const pageModules = siteData[currentPage] || [];
+  const pageModules = siteData[currentPage] || INITIAL_LAYOUTS[currentPage] || [];
 
   // --- COLLECTION STATE ---
   const [courses, setCourses] = useState<any[]>([]);
@@ -71,40 +106,7 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState<any[]>([]);
   const [editItem, setEditItem] = useState<any>(null);
 
-  const INITIAL_LAYOUTS: { [key: string]: ModuleData[] } = {
-    home: [
-      { id: 'h1', type: 'HeroSlider', title: '建立深層連結，重塑依附關係', subtitle: 'Emotionally Focused Therapy', content: '我們是「臺灣EFT治療學會」，致力於推廣情緒焦點治療 (EFT)，協助治療師與大眾建立更安全、更親密的關係。', background: 'dark' },
-      { id: 's1', type: 'Stats', items: [{label: '認證會員', value: '500+'}, {label: '國際督導', value: '20+'}, {label: '年度課程', value: '100+'}] },
-      { id: 'f1', type: 'Features', title: '核心發展亮點', items: [{title: '專業認證體系', description: '從初階到進階的完整認證路徑'}, {title: '國際師資與顧問', description: '媒合全球頂尖 EFT 專業見解'}, {title: '臨床培訓中心', description: '提供實務督導與專業團體支持'}] }
-    ],
-    about: [
-      { id: 'ab1', type: 'HeroSlider', title: '推廣愛與連結的專業社群', subtitle: 'Our Mission & Vision', content: '臺灣EFT治療學會 (twEFT) 是經由 ICEEFT 授權，在台灣推廣情緒焦點治療的專業組織。我們致力於培訓專業治療師，並在大眾中推廣健康的依附關係與情感連結。', background: 'slate' },
-      { id: 'ab2', type: 'Timeline', title: '協會發展里程碑', subtitle: 'Our History', items: [{title: '學會正式成立', description: '2013年由劉婷老師引進並正式創立學會'}, {title: '國際認證轉型', description: '正式取得 ICEEFT 在台教學與認證授權'}, {title: '邁向多元發展', description: '發展多樣化進階工作坊與專業督導社群'}] }
-    ],
-    'eft-intro': [
-      { id: 'eft1', type: 'HeroSlider', title: '看見情緒背後的依附訊息', subtitle: 'What is EFT?', content: '情緒焦點治療 (EFT) 是一套結合人本主義與依附理論的短期治療方式，廣泛應用於個人、伴侶及家庭諮商。它能幫助我們在情緒混亂中，找到安全感的出口。', background: 'primary-light' },
-      { id: 'eft2', type: 'Features', title: 'EFT 的核心重點', items: [{title: '情緒就是能量', description: '情緒並非干擾，而是引導改變的主要動力'}, {title: '修復依附連結', description: '處理深刻的核心依賴需求，建立安全感'}, {title: '改變循環脈絡', description: '打破重複的負向互動與防衛機制'}] }
-    ],
-    international: [
-      { id: 'int1', type: 'HeroSlider', title: '接軌國際：ICEEFT 全球聯盟', subtitle: 'Global Partnership', content: 'twEFT 與加拿大 ICEEFT 緊密連結，確保台灣的培訓品質符合全球統一的高標準認證體系。', background: 'dark' },
-      { id: 'int2', type: 'Features', title: '國際合作夥伴', items: [{title: 'ICEEFT', description: '加拿大國際情緒焦點治療中心'}, {title: 'Regional Networks', description: '與全球 80+ 地區分會進行學術交流'}] }
-    ],
-    membership: [
-      { id: 'm1', type: 'HeroSlider', title: '專業之路，與你同行', subtitle: 'Membership Plans', content: '加入 twEFT，享受國際級電子通訊報、專業課程優惠以及社群同儕支持。', background: 'slate' },
-      { id: 'm2', type: 'PricingGrid', title: '年度會員方案', items: [{title: '專業會員', price: 'NT$ 2,000/年', description: '適用於心理師、輔導老師相關領域工作者'}, {title: '一般會員', price: 'NT$ 1,500/年', description: '適用於對 EFT 有興趣之相關人士'}, {title: '學生會員', price: 'NT$ 1,000/年', description: '需提供在學相關證明'}] }
-    ],
-    contact: [
-      { id: 'c1', type: 'HeroSlider', title: '持續性的專業對話', subtitle: 'Get in Touch', content: '如果您有任何課程、合作或入會需求，請隨時與我們秘書處聯繫。', background: 'dark' },
-      { id: 'c2', type: 'ImageTextGrid', title: '協會辦事處', subtitle: 'Office Info', content: '服務時間：週一至週五 09:30 - 17:30。電話：(02) ****-**** 信箱：secretary@tweft.org.tw' }
-    ],
-    resources: [
-      { id: 'r1', type: 'HeroSlider', title: '深化學習：專業文獻與資源', subtitle: 'Resource Hub', content: '這裡收集了 EFT 的學術研究、臨床工具手冊與相關中文化量表。', background: 'slate' },
-      { id: 'r2', type: 'Features', title: '精選下載資源', items: [{title: '伴侶治療效能研究', description: '2024 中文譯本'}, {title: '依附風格評估表', description: '臨床實務使用參考'}] }
-    ],
-    courses: [
-        { id: 'co1', type: 'HeroSlider', title: '系統化的專業認證路徑', subtitle: 'LMS & Training', content: '從初階 Externship 到專題工作坊，我們提供完整的專業成長地圖。', background: 'dark' }
-    ]
-  };
+
 
   // --- DATABASE SYNC ---
   useEffect(() => {
@@ -445,7 +447,27 @@ export default function AdminDashboard() {
                     <div className="flex gap-4">
                        <button onClick={()=>setActiveTab('course_mgr')} className="px-8 py-4 bg-white/5 rounded-2xl text-xs font-black hover:bg-primary transition-all">管理全球課程</button>
                        <button onClick={()=>setActiveTab('news_mgr')} className="px-8 py-4 bg-white/5 rounded-2xl text-xs font-black hover:bg-primary transition-all">發佈今日公告</button>
-                       <button onClick={()=>setActiveTab('users')} className="px-8 py-4 bg-white/5 rounded-2xl text-xs font-black hover:bg-primary transition-all">審核專業資格</button>
+                       <button onClick={async ()=>{
+                          setLoading(true);
+                          try {
+                             for (const p of pagesMap) {
+                                const { error } = await supabase.from('cms_pages').upsert({
+                                   slug: p.id,
+                                   title: p.label,
+                                   modules: INITIAL_LAYOUTS[p.id] || [],
+                                   is_published: true
+                                }, { onConflict: 'slug' });
+                                if (error) throw error;
+                             }
+                             showToast('全站模板初始化成功！');
+                             fetchPageData(currentPage);
+                          } catch (err) {
+                             console.error(err);
+                             showToast('初始化失敗', 'error');
+                          } finally {
+                             setLoading(false);
+                          }
+                       }} className="px-8 py-4 bg-primary/20 text-primary border border-primary/20 rounded-2xl text-xs font-black hover:bg-primary hover:text-white transition-all">一鍵初始化全站內容模板</button>
                     </div>
                   </motion.div>
                 )}
