@@ -2,9 +2,9 @@
 
 @theme {
   --color-primary: #9FB1B9;
-  --color-secondary: #B8A398;
-  --color-accent: #D4D9C5;
-  --color-dark: #20282A;
+  --color-secondary: #C8B6A9;
+  --color-accent: #DFE3D5;
+  --color-dark: #2F3A3D;
   
   --color-background: #FAF7F2;
   --color-foreground: #2D3639;
@@ -16,14 +16,14 @@
   --background: #FAF7F2;
   --foreground: #2D3639;
   --primary: #9FB1B9;
-  --secondary: #B8A398;
-  --accent: #D4D9C5;
-  --dark: #20282A;
+  --secondary: #C8B6A9;
+  --accent: #DFE3D5;
+  --dark: #2F3A3D;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #03312E;
+    --background: #252F32;
     --foreground: #ffffff;
   }
 }
