@@ -97,7 +97,7 @@ export default function Home() {
               </h1>
               
               <p className="text-xl text-white/60 mb-10 leading-relaxed max-w-xl">
-                我們是「臺灣EFT治療學會」，致力於推廣情緒焦點治療 (EFT)，透過實證研究與專業培訓，協助治療師與大眾建立更安全、更親密的關係。
+                我們致力於推廣情緒焦點治療 (EFT)，透過實證研究與專業路徑，協助治療師與大眾在情感的深度中建立安全連結，重拾生命的韌性。
               </p>
               
               <div className="flex flex-wrap gap-4">

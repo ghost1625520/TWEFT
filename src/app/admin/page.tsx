@@ -71,8 +71,8 @@ export default function AdminDashboard() {
       { id: 'ab2', type: 'ImageTextGrid', title: '學會發展史', subtitle: 'Since 2013', content: '我們從最初的一群熱血治療師，發展至今已成為國際認證的專業培訓基地。' }
     ],
     'eft-intro': [
-      { id: 'eft1', type: 'HeroSlider', title: '認識情緒焦點治療', subtitle: 'What is EFT?', content: 'EFT 是一套基於依附理論的短期治療，已被科學證明能有效修復親密關係。', background: 'primary-light' },
-      { id: 'eft2', type: 'VideoSection', title: 'EFT 治療現場預覽', subtitle: 'The Power of Connection', content: '透過影片了解我們如何處理情緒困境。' }
+      { id: 'eft1', type: 'HeroSlider', title: '認識情緒焦點治療', subtitle: 'What is EFT?', content: 'EFT 是一套基於依附理論的短期治療。它不僅處理衝突，更是在情緒的「涵容之海」中學會自在遨遊，而不被強大的情感洪流所「淹沒」。', background: 'primary-light' },
+      { id: 'eft2', type: 'VideoSection', title: 'EFT 治療現場預覽', subtitle: 'The Power of Connection', content: '透過影片了解我們如何看見情緒背後的訊息。' }
     ],
     membership: [
       { id: 'm1', type: 'HeroSlider', title: '加入專業社群', subtitle: 'Become a Member', content: '加入 twEFT，享用國際級資源與專業同儕支持系統。', background: 'dark' },

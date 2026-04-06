@@ -35,7 +35,7 @@ export default function EFTIntroPage() {
       <SubpageHero 
         title="什麼是 EFT" 
         subtitle="What is EFT"
-        description="情緒焦點治療 (Emotionally Focused Therapy, EFT) 是一套以科學研究為基礎，專注於情緒與關係連結的系統性治療法。"
+        description="情緒焦點治療 (Emotionally Focused Therapy, EFT) 是一套以科學為基礎、以「依附理論」為核心的系統設計。它不僅是處理衝突，更是協助我們在情緒的「涵容之海」中學會自在遨遊，而不被強大的情感洪流所淹沒。"
       />
 
       {/* Science & Proof Section */}
