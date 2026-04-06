@@ -1,30 +1,31 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #9FB1B9;
-  --color-secondary: #C8B6A9;
-  --color-accent: #DFE3D5;
-  --color-dark: #2F3A3D;
+  --color-primary: #A8BEC6;
+  --color-secondary: #C7AFA6;
+  --color-accent: #C9D3C0;
+  --color-dark: #253239;
   
-  --color-background: #FAF7F2;
-  --color-foreground: #2D3639;
+  --color-background: #F7F4EF;
+  --color-foreground: #253239;
   
-  --font-sans: "Inter", "Outfit", "Roboto", "Noto Sans TC", sans-serif;
+  --font-sans: "Inter", "Outfit", "Noto Sans TC", sans-serif;
 }
 
 :root {
-  --background: #FAF7F2;
-  --foreground: #2D3639;
-  --primary: #9FB1B9;
-  --secondary: #C8B6A9;
-  --accent: #DFE3D5;
-  --dark: #2F3A3D;
+  --background: #F7F4EF;
+  --foreground: #253239;
+  --primary: #A8BEC6;
+  --secondary: #C7AFA6;
+  --accent: #C9D3C0;
+  --dark: #253239;
+  --primary-rgb: 168, 190, 198;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #252F32;
-    --foreground: #ffffff;
+    --background: #1C262A;
+    --foreground: #EEF1F0;
   }
 }
 
@@ -33,17 +34,38 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
 }
 
 /* Custom Utilities */
 .glass {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(168, 190, 198, 0.08);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(168, 190, 198, 0.18);
+}
+
+.glass-white {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
 .text-gradient {
   background: linear-gradient(135deg, var(--primary), var(--secondary));
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+/* Morandi mist overlay */
+.mist-overlay {
+  background: linear-gradient(
+    180deg,
+    rgba(168, 190, 198, 0.12) 0%,
+    transparent 60%
+  );
+}
+
+* {
+  scroll-behavior: smooth;
 }
