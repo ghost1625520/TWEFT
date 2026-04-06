@@ -1,31 +1,37 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #A8BEC6;
-  --color-secondary: #C7AFA6;
-  --color-accent: #C9D3C0;
-  --color-dark: #253239;
-  
-  --color-background: #F7F4EF;
-  --color-foreground: #253239;
-  
+  /* ── 煙波晨霧系統 Morandi Morning Mist ── */
+  --color-primary: #B8CDD4;        /* 輕煙波藍 — like mist on water */
+  --color-primary-deep: #7A9FAD;   /* 深煙波 — for strong accents */
+  --color-secondary: #D4BDB8;      /* 霧玫瑰 — warm counterbalance */
+  --color-accent: #C8D4C0;         /* 霧綠 — sage mist */
+  --color-surface: #EDE9E2;        /* 表面色 — layered warm white */
+  --color-background: #F4F1EC;     /* 柔亞麻 — base background */
+  --color-foreground: #2E3D45;     /* 文字 — deep blue-grey, never pure black */
+
+  /* ── The KEY change: dark is no longer truly dark ── */
+  --color-dark: #4D6270;           /* 霧深青 — atmospheric, not heavy */
+
   --font-sans: "Inter", "Outfit", "Noto Sans TC", sans-serif;
 }
 
 :root {
-  --background: #F7F4EF;
-  --foreground: #253239;
-  --primary: #A8BEC6;
-  --secondary: #C7AFA6;
-  --accent: #C9D3C0;
-  --dark: #253239;
-  --primary-rgb: 168, 190, 198;
+  --background: #F4F1EC;
+  --foreground: #2E3D45;
+  --primary: #B8CDD4;
+  --primary-deep: #7A9FAD;
+  --secondary: #D4BDB8;
+  --accent: #C8D4C0;
+  --surface: #EDE9E2;
+  --dark: #4D6270;
+  --primary-rgb: 184, 205, 212;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #1C262A;
-    --foreground: #EEF1F0;
+    --background: #2A383F;
+    --foreground: #EEF2F3;
   }
 }
 
@@ -37,33 +43,58 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* Custom Utilities */
+/* ── Utility Classes ── */
+
+/* Glassmorphism — now uses the primary misty blue as the tint */
 .glass {
-  background: rgba(168, 190, 198, 0.08);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(168, 190, 198, 0.18);
+  background: rgba(184, 205, 212, 0.12);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(184, 205, 212, 0.25);
 }
 
 .glass-white {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.65);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
+/* Text gradient — primary blue → secondary rose */
 .text-gradient {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  background: linear-gradient(135deg, #7A9FAD 0%, #D4BDB8 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-/* Morandi mist overlay */
-.mist-overlay {
+/* Mist card surface */
+.mist-card {
+  background: rgba(244, 241, 236, 0.8);
+  border: 1px solid rgba(184, 205, 212, 0.2);
+  backdrop-filter: blur(8px);
+}
+
+/* Morandi divider */
+.mist-divider {
+  border: none;
+  height: 1px;
   background: linear-gradient(
-    180deg,
-    rgba(168, 190, 198, 0.12) 0%,
-    transparent 60%
+    to right,
+    transparent,
+    rgba(184, 205, 212, 0.4),
+    transparent
   );
+}
+
+/* Animated mist background for hero sections */
+@keyframes mistDrift {
+  0%, 100% { opacity: 0.4; transform: translateX(0) scale(1); }
+  50% { opacity: 0.6; transform: translateX(12px) scale(1.03); }
+}
+
+.mist-animate {
+  animation: mistDrift 12s ease-in-out infinite;
 }
 
 * {
