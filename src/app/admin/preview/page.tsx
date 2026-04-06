@@ -7,24 +7,36 @@ export default function AdminPreviewPage() {
   const [modules, setModules] = useState<ModuleData[]>([]);
 
   useEffect(() => {
-    // Listen for data from the parent admin dashboard
+    // 1. Listen for data updates from parent
     const handleMessage = (event: MessageEvent) => {
-      // Security: In a real app, check event.origin
       if (event.data.type === 'UPDATE_CMS_PREVIEW') {
         setModules(event.data.modules);
       }
     };
-
     window.addEventListener('message', handleMessage);
     
-    // Check localStorage for initial load
-    const saved = localStorage.getItem('cms_preview_data');
-    if (saved) {
-      try { setModules(JSON.parse(saved)); } catch (e) {}
-    }
+    // 2. Report actual content height to parent (Eliminate clipping)
+    const resizeObserver = new ResizeObserver(() => {
+      window.parent.postMessage({ 
+        type: 'IFRAME_RESIZE', 
+        height: document.body.scrollHeight 
+      }, '*');
+    });
+    resizeObserver.observe(document.body);
 
-    return () => window.removeEventListener('message', handleMessage);
+    // Initial check for localStorage fallback
+    const saved = localStorage.getItem('cms_preview_data');
+    if (saved) { try { setModules(JSON.parse(saved)); } catch (e) {} }
+
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      resizeObserver.disconnect();
+    };
   }, []);
+
+  const handleSelectModule = (id: string | number) => {
+    window.parent.postMessage({ type: 'SELECT_MODULE', id }, '*');
+  };
 
   return (
     <div className="bg-white min-h-screen flex flex-col">
@@ -38,7 +50,11 @@ export default function AdminPreviewPage() {
       </header>
 
       <main className="flex-grow">
-        <ModuleRenderer modules={modules} isAdmin={false} />
+        <ModuleRenderer 
+           modules={modules} 
+           isAdmin={true} 
+           onSelect={handleSelectModule}
+        />
       </main>
 
       {/* Mock Footer for Context */}
