@@ -38,7 +38,6 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ModuleRenderer, type ModuleData, type ModuleType } from '@/components/ModuleRenderer';
-import { CMS_DEFAULTS } from '@/lib/cms-defaults';
 
 export default function AdminDashboard() {
   const { profile } = useAuth();
@@ -70,6 +69,34 @@ export default function AdminDashboard() {
 
   const [editItem, setEditItem] = useState<any>(null);
 
+  const INITIAL_LAYOUTS: { [key: string]: ModuleData[] } = {
+    home: [
+      { id: 'h1', type: 'HeroSlider', title: '建立深層連結，重塑依附關係', subtitle: 'Emotionally Focused Therapy', content: '我們是「臺灣EFT治療學會」，致力於推廣情緒焦點治療 (EFT)，協助治療師與大眾建立更安全、更親密的關係。', background: 'dark' },
+      { id: 's1', type: 'Stats', items: [{label: '認證會員', value: '500+'}, {label: '國際督導', value: '20+'}, {label: '年度課程', value: '100+'}] },
+      { id: 'f1', type: 'Features', items: [{title: '專業課程', description: '從初階到進階的完整認證體系'}, {title: '國際認證心理師', description: '媒合專業認證的 EFT 治療師'}, {title: '認證路徑', description: '邁向國際認證治療師的必經之路'}] }
+    ],
+    about: [
+      { id: 'ab1', type: 'HeroSlider', title: '關於學會：推廣愛與連結', subtitle: 'Our Mission & Vision', content: '臺灣EFT治療學會 (twEFT) 是經由 ICEEFT 授權，在台灣推廣情緒焦點治療的專業組織體。', background: 'slate' },
+      { id: 'ab2', type: 'ImageTextGrid', title: '學會發展史', subtitle: 'Since 2013', content: '我們從最初的一群熱血治療師，發展至今已成為國際認證的專業培訓基地。' }
+    ],
+    'eft-intro': [
+      { id: 'eft1', type: 'HeroSlider', title: '認識情緒焦點治療', subtitle: 'What is EFT?', content: 'EFT 是一套基於依附理論的短期治療，已被科學證明能有效修復親密關係。', background: 'primary-light' },
+      { id: 'eft2', type: 'VideoSection', title: 'EFT 治療現場預覽', subtitle: 'The Power of Connection', content: '透過影片了解我們如何處理情緒困境。' }
+    ],
+    membership: [
+      { id: 'm1', type: 'HeroSlider', title: '加入專業社群', subtitle: 'Become a Member', content: '加入 twEFT，享用國際級資源與專業同儕支持系統。', background: 'dark' },
+      { id: 'm2', type: 'PricingGrid', title: '會員方案', items: [{title: '專業會員', price: 'NT$ 2,000/年'}, {title: '一般會員', price: 'NT$ 1,500/年'}] }
+    ],
+    resources: [
+      { id: 'r1', type: 'HeroSlider', title: '專業資源專區', subtitle: 'Resource Library', content: '匯集全球 EFT 臨床實務與學術研究資源。', background: 'slate' },
+      { id: 'r2', type: 'Features', title: '精選文獻', items: [{title: 'EFT 成效研究綜述', description: '2024 更新版'}, {title: '伴侶諮商評估量表', description: '中文版'}] }
+    ],
+    contact: [
+      { id: 'c1', type: 'HeroSlider', title: '與我們聯繫', subtitle: 'Contact Us', content: '如果您有任何課程、認證或合作需求，歡迎來信洽詢。', background: 'dark' },
+      { id: 'c2', type: 'ImageTextGrid', title: '辦公室資訊', subtitle: 'Location', content: '台北市大安區... (地址建置中)' }
+    ]
+  };
+
   // --- DATABASE SYNC ---
   useEffect(() => {
     fetchPageData(currentPage);
@@ -86,16 +113,24 @@ export default function AdminDashboard() {
 
       if (error && error.code !== 'PGRST116') throw error;
       
-      if (data) {
+      if (data && data.modules && data.modules.length > 0) {
         setSiteData(prev => ({ ...prev, [slug]: data.modules }));
       } else {
-        // If no data exists in DB, load the default static content to allow "Edit Existing"
-        setSiteData(prev => ({ ...prev, [slug]: CMS_DEFAULTS[slug] || [] }));
+        // Fallback to INITIAL_LAYOUTS if database is empty
+        const defaultLayout = INITIAL_LAYOUTS[slug] || [];
+        setSiteData(prev => ({ ...prev, [slug]: defaultLayout }));
       }
     } catch (err) {
       console.error('Error fetching page data:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const restoreDefault = () => {
+    if (confirm('確定要恢復此頁面的初始模板嗎？這將覆蓋您目前尚未儲存的所有編輯。')) {
+      const defaultLayout = INITIAL_LAYOUTS[currentPage] || [];
+      setSiteData({ ...siteData, [currentPage]: defaultLayout });
     }
   };
 
@@ -310,8 +345,16 @@ export default function AdminDashboard() {
                              </div>
                              <h2 className="text-2xl font-black">正在編輯：{pagesMap.find(p => p.id === currentPage)?.label}</h2>
                           </div>
-                          <div className="flex items-center gap-4 text-white/30 text-[10px] font-black uppercase tracking-widest bg-black/20 px-5 py-2 rounded-full">
-                             <Layout size={12} /> {pageModules.length} 個啟用的區塊
+                          <div className="flex items-center gap-4">
+                             <button 
+                               onClick={restoreDefault}
+                               className="px-6 py-2 bg-white/5 hover:bg-red-500/10 hover:text-red-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-transparent hover:border-red-500/20"
+                             >
+                               恢復初始模板
+                             </button>
+                             <div className="flex items-center gap-4 text-white/30 text-[10px] font-black uppercase tracking-widest bg-black/20 px-5 py-2 rounded-full">
+                                <Layout size={12} /> {pageModules.length} 個啟用的區塊
+                             </div>
                           </div>
                        </div>
 

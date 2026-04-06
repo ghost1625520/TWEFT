@@ -8,7 +8,6 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { ModuleRenderer, type ModuleData } from "@/components/ModuleRenderer";
-import { CMS_DEFAULTS } from "@/lib/cms-defaults";
 
 export default function Home() {
   const [modules, setModules] = useState<ModuleData[] | null>(null);
@@ -25,13 +24,9 @@ export default function Home() {
         
         if (data && data.modules) {
           setModules(data.modules);
-        } else {
-          // Use universal defaults if DB is empty
-          setModules(CMS_DEFAULTS['home']);
         }
       } catch (err) {
         console.error("Error fetching homepage modules:", err);
-        setModules(CMS_DEFAULTS['home']);
       } finally {
         setLoading(false);
       }
