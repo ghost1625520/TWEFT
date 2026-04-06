@@ -30,7 +30,7 @@ export default function DashboardLayout({
   return (
     <div className="flex h-screen bg-[#0A0A0B] overflow-hidden">
       <DashboardSidebar />
-      <main className="flex-grow overflow-y-auto pt-32 pb-24 px-12 custom-scrollbar">
+      <main className="flex-grow overflow-y-auto pb-24 px-12 custom-scrollbar">
         {children}
       </main>
     </div>
