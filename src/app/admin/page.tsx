@@ -44,7 +44,7 @@ import CourseForm from '@/components/admin/CourseForm';
 import NewsForm from '@/components/admin/NewsForm';
 import ModuleEditor from '@/components/admin/ModuleEditor';
 
-export const INITIAL_LAYOUTS: { [key: string]: ModuleData[] } = {
+const INITIAL_LAYOUTS: { [key: string]: ModuleData[] } = {
   home: [
     { id: 'h1', type: 'HeroSlider', title: '建立深層連結，重塑依附關係', subtitle: 'Emotionally Focused Therapy', content: '我們是「臺灣EFT治療學會」，致力於推廣情緒焦點治療 (EFT)，協助治療師與大眾建立更安全、更親密的關係。', background: 'dark' },
     { id: 's1', type: 'Stats', items: [{label: '認證會員', value: '500+'}, {label: '國際督導', value: '20+'}, {label: '年度課程', value: '100+'}] },
