@@ -41,6 +41,7 @@ import { ModuleRenderer, type ModuleData, type ModuleType } from '@/components/M
 
 export default function AdminDashboard() {
   const { profile } = useAuth();
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState('cms');
   const [viewMode, setViewMode] = useState<'edit' | 'preview'>('edit');
   const [searchQuery, setSearchQuery] = useState('');
@@ -52,21 +53,11 @@ export default function AdminDashboard() {
   const pageModules = siteData[currentPage] || [];
 
   // --- COLLECTION STATE ---
-  const [courses, setCourses] = useState([
-    { id: 1, title: 'EFT 國際認證初階 (Externship)', category: 'Core Training', status: 'Active', price: 'NT$ 22,000', syllabus: ['依附理論基礎', '情感追蹤技術'] },
-    { id: 2, title: '情緒焦點個人治療 (EFIT)', category: 'Specialized', status: 'Draft', price: 'NT$ 18,000', syllabus: ['個人與關係的整合'] }
-  ]);
-
-  const [news, setNews] = useState([
-    { id: 1, title: '2025 國際年會台北場公告', date: '2024-03-15', author: 'Secretary', content: '內容建置中...' },
-    { id: 2, title: '新書預購：依附科學之鑰', date: '2024-02-28', author: 'Research Team', content: '由 Susan Johnson 親自撰寫...' }
-  ]);
-
-  const [users, setUsers] = useState([
-    { id: 'u1', name: '王小明', email: 'ming@example.com', role: 'Guest', status: 'Pending', permissions: ['view_cms'] },
-    { id: 'u2', name: '李華', email: 'hua@example.com', role: 'Professional', status: 'Verified', permissions: ['edit_cms', 'manage_courses'] }
-  ]);
-
+  const [courses, setCourses] = useState<any[]>([]);
+  const [news, setNews] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [downloads, setDownloads] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [editItem, setEditItem] = useState<any>(null);
 
   const INITIAL_LAYOUTS: { [key: string]: ModuleData[] } = {
@@ -100,7 +91,26 @@ export default function AdminDashboard() {
   // --- DATABASE SYNC ---
   useEffect(() => {
     fetchPageData(currentPage);
+    fetchGlobalData();
   }, [currentPage]);
+
+  const fetchGlobalData = async () => {
+    try {
+      const { data: n } = await supabase.from('news').select('*').order('date', { ascending: false });
+      const { data: c } = await supabase.from('courses').select('*').order('id', { ascending: true });
+      const { data: o } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+      const { data: d } = await supabase.from('downloads_resources').select('*').order('uploaded_at', { ascending: false });
+      const { data: u } = await supabase.from('profiles').select('*');
+      
+      if (n) setNews(n);
+      if (c) setCourses(c);
+      if (o) setOrders(o);
+      if (d) setDownloads(d);
+      if (u) setUsers(u);
+    } catch (err) {
+      console.error('Error fetching global data:', err);
+    }
+  };
 
   const fetchPageData = async (slug: string) => {
     setLoading(true);
@@ -116,12 +126,58 @@ export default function AdminDashboard() {
       if (data && data.modules && data.modules.length > 0) {
         setSiteData(prev => ({ ...prev, [slug]: data.modules }));
       } else {
-        // Fallback to INITIAL_LAYOUTS if database is empty
+        // Fallback to INITIAL_LAYOUTS if database is empty or row doesn't exist
         const defaultLayout = INITIAL_LAYOUTS[slug] || [];
         setSiteData(prev => ({ ...prev, [slug]: defaultLayout }));
       }
     } catch (err) {
       console.error('Error fetching page data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getDay = (dateStr: string) => {
+    if (!dateStr || !dateStr.includes('-')) return '01';
+    return dateStr.split('-')[2] || '01';
+  };
+
+  const getMonth = (dateStr: string) => {
+    if (!dateStr || !dateStr.includes('-')) return 'MAR';
+    const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+    const parts = dateStr.split('-');
+    const m = parseInt(parts[1]);
+    return months[m-1] || 'MAR';
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.storage
+        .from('resources')
+        .upload(`${Date.now()}_${file.name}`, file);
+
+      if (error) throw error;
+      
+      const { error: dbErr } = await supabase
+        .from('downloads_resources')
+        .insert({
+           name: file.name,
+           file_path: data.path,
+           file_type: file.type,
+           uploaded_by: profile?.id
+        });
+
+      if (dbErr) throw dbErr;
+      
+      alert('檔案上傳成功並已記錄至資料庫！');
+      fetchGlobalData();
+    } catch (err) {
+      console.error('Error uploading file:', err);
+      alert('上傳失敗，請檢查儲存空間或權限。');
     } finally {
       setLoading(false);
     }
@@ -141,7 +197,7 @@ export default function AdminDashboard() {
         .from('cms_pages')
         .upsert({
           slug: currentPage,
-          title: pagesMap.find(p => p.id === currentPage)?.label || currentPage,
+          title: pagesMap.find((p: any) => p.id === currentPage)?.label || currentPage,
           modules: siteData[currentPage],
           is_published: true,
           last_updated_at: new Date().toISOString()
@@ -188,7 +244,10 @@ export default function AdminDashboard() {
   };
 
   // --- DATA HELPERS ---
-  const filteredUsers = users.filter(u => u.name.includes(searchQuery) || u.email.includes(searchQuery));
+  const filteredUsers = users.filter(u => 
+    (u.full_name || '').includes(searchQuery) || 
+    (u.email || '').includes(searchQuery)
+  );
 
   const tabs = [
     { id: 'cms', label: '頁面編輯', icon: Layout },
@@ -359,6 +418,22 @@ export default function AdminDashboard() {
                        </div>
 
                        <div className="space-y-6">
+                          {loading && (
+                             <div className="py-20 flex flex-col items-center justify-center gap-4 bg-white/5 border border-dashed border-white/10 rounded-[4rem] text-white/20 animate-pulse">
+                                <div className="w-10 h-10 border-4 border-white/30 border-t-primary rounded-full animate-spin" />
+                                <span className="text-xs font-black uppercase tracking-widest">正在同步雲端資料庫...</span>
+                             </div>
+                          )}
+                          {!loading && pageModules.length === 0 && (
+                             <div className="py-20 flex flex-col items-center justify-center gap-6 bg-white/5 border border-dashed border-white/10 rounded-[4rem]">
+                                <Layout size={48} className="text-white/10" />
+                                <div className="text-center space-y-2">
+                                   <p className="text-xl font-black text-white/40">此頁面目前尚無內容</p>
+                                   <p className="text-xs text-white/20 font-bold uppercase tracking-widest">點擊下方按鈕或「恢復初始模板」開始編輯</p>
+                                </div>
+                                <button onClick={restoreDefault} className="px-8 py-4 bg-primary/20 text-primary border border-primary/20 rounded-2xl text-xs font-black hover:bg-primary hover:text-white transition-all">套用學會官方模板</button>
+                             </div>
+                          )}
                           {pageModules.map((module, i) => (
                             <motion.div key={module.id} layout className="p-10 bg-white/5 border border-white/5 rounded-[3rem] group hover:border-white/10 transition-all relative shadow-xl backdrop-blur-sm overflow-hidden">
                                <div className="absolute right-10 top-10 flex items-center gap-3">
@@ -451,6 +526,11 @@ export default function AdminDashboard() {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                           {courses.length === 0 && (
+                              <div className="col-span-2 py-40 border-2 border-dashed border-white/5 rounded-[4rem] text-center text-white/20 font-black uppercase tracking-widest text-xs">
+                                 尚無課程資料
+                              </div>
+                           )}
                            {courses.map(course => (
                              <div key={course.id} className="p-10 bg-white/5 border border-white/10 rounded-[3rem] group hover:border-accent transition-all relative overflow-hidden backdrop-blur-2xl">
                                 <div className="absolute top-10 right-10 flex items-center gap-3">
@@ -472,7 +552,7 @@ export default function AdminDashboard() {
                                    <div className="pt-6 border-t border-white/10 space-y-4">
                                       <div className="text-[10px] font-black text-white/20 uppercase tracking-widest">Syllabus Highlights</div>
                                       <div className="flex flex-wrap gap-2">
-                                         {course.syllabus.map((s, i) => (
+                                         {(course.syllabus || []).map((s: string, i: number) => (
                                            <span key={i} className="px-3 py-1.5 bg-white/5 rounded-lg text-[10px] font-medium text-white/40">{s}</span>
                                          ))}
                                       </div>
@@ -496,17 +576,22 @@ export default function AdminDashboard() {
                            </button>
                         </div>
                         <div className="space-y-4">
-                           {news.map(item => (
+                           {news.length === 0 && (
+                              <div className="py-20 border-2 border-dashed border-white/5 rounded-[3rem] text-center text-white/20 font-black uppercase tracking-widest text-xs">
+                                 尚無公告消息
+                              </div>
+                           )}
+                           {news.map((item: any) => (
                              <div key={item.id} className="p-8 bg-white/5 border border-white/5 rounded-[2.5rem] flex items-center justify-between group hover:border-primary transition-all backdrop-blur-3xl">
                                 <div className="flex items-center gap-10">
                                    <div className="flex flex-col items-center justify-center w-20 h-20 bg-primary/10 rounded-3xl border border-primary/20 text-primary">
-                                      <span className="text-2xl font-black">{item.date.split('-')[2]}</span>
-                                      <span className="text-[9px] font-black uppercase tracking-widest">MARCH</span>
+                                      <span className="text-2xl font-black">{getDay(item.date)}</span>
+                                      <span className="text-[9px] font-black uppercase tracking-widest">{getMonth(item.date)}</span>
                                    </div>
                                    <div className="space-y-1">
                                       <h4 className="text-xl font-black text-white group-hover:text-primary transition-colors">{item.title}</h4>
                                       <div className="flex items-center gap-4 text-xs text-white/30 font-bold">
-                                         <span className="flex items-center gap-2 underline">由 {item.author} 撰寫</span>
+                                         <span className="flex items-center gap-2 underline">由 {item.author || 'Admin'} 撰寫</span>
                                          <span>於 {item.date}</span>
                                       </div>
                                    </div>
@@ -536,21 +621,19 @@ export default function AdminDashboard() {
                                    <th className="px-10 py-8">訂單編號/日期</th>
                                    <th className="px-10 py-8">會員名稱</th>
                                    <th className="px-10 py-8">對應項目</th>
-                                   <th className="px-10 py-8 text-right">操作</th>
+                                   <th className="px-10 py-8 text-right">金額狀態</th>
                                 </tr>
                              </thead>
                              <tbody className="divide-y divide-white/5">
-                                {[
-                                  { id: 'ORD-8821', user: '陳大文', item: 'EFT 國際認證初階' },
-                                  { id: 'ORD-8820', user: '林美玲', item: '專業會員年費' }
-                                ].map(ord => (
+                                {orders.length === 0 && (
+                                   <tr><td colSpan={4} className="px-10 py-20 text-center text-white/20 font-black uppercase tracking-widest text-xs">尚無任何課程訂單記錄</td></tr>
+                                )}
+                                {orders.map((ord: any) => (
                                   <tr key={ord.id} className="hover:bg-white/5 transition-colors">
-                                     <td className="px-10 py-8 font-bold">{ord.id}</td>
-                                     <td className="px-10 py-8 font-black">{ord.user}</td>
-                                     <td className="px-10 py-8 text-white/40">{ord.item}</td>
-                                     <td className="px-10 py-8 text-right">
-                                        <button className="px-6 py-2 bg-white/5 rounded-xl text-xs font-black">詳情</button>
-                                     </td>
+                                     <td className="px-10 py-8 font-bold text-primary">{ord.id}</td>
+                                     <td className="px-10 py-8 font-black">{ord.user_name}</td>
+                                     <td className="px-10 py-8 text-white/40">{ord.item_name}</td>
+                                     <td className="px-10 py-8 text-right font-black text-white/60">{ord.amount}</td>
                                   </tr>
                                 ))}
                              </tbody>
@@ -563,16 +646,36 @@ export default function AdminDashboard() {
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
                        <div className="flex items-end justify-between">
                           <h2 className="text-5xl font-black text-white">資源管理中心</h2>
-                          <button className="px-10 py-5 bg-primary text-white font-black rounded-2xl flex items-center gap-3">
+                          <input 
+                            type="file" 
+                            ref={fileInputRef} 
+                            onChange={handleFileUpload} 
+                            className="hidden" 
+                          />
+                          <button 
+                            onClick={() => fileInputRef.current?.click()}
+                            className="px-10 py-5 bg-primary text-white font-black rounded-2xl flex items-center gap-3 shadow-[0_20px_40px_rgba(230,126,34,0.3)] hover:scale-105 transition-all"
+                          >
                              <Plus size={20} /> 上傳資源
                           </button>
                        </div>
                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                          {['認證手冊.pdf', '臨床影音.mp4'].map((file, i) => (
-                            <div key={i} className="p-10 bg-white/5 border border-white/5 rounded-[3rem] space-y-6">
-                               <FileText size={32} className="text-primary" />
-                               <h4 className="text-xl font-black">{file}</h4>
-                               <button className="w-full py-4 bg-white/5 rounded-2xl text-xs font-black">編輯權限</button>
+                          {downloads.length === 0 && (
+                             <div className="col-span-3 py-20 border-2 border-dashed border-white/5 rounded-[3rem] text-center text-white/20 font-black uppercase tracking-widest text-xs">
+                                尚無下載資源
+                             </div>
+                          )}
+                          {downloads.map((file: any, i: number) => (
+                            <div key={i} className="p-10 bg-white/5 border border-white/10 rounded-[3rem] space-y-6 group hover:border-primary transition-all">
+                               <div className="flex items-center justify-between">
+                                  <div className="p-4 bg-primary/10 rounded-2xl text-primary shadow-inner"><FileText size={28} /></div>
+                                  <span className="px-3 py-1 bg-white/10 rounded-lg text-[9px] font-black uppercase tracking-widest text-white/40 border border-white/5">{file.access_level || 'Professional'}</span>
+                               </div>
+                               <h4 className="text-xl font-black truncate text-white">{file.name}</h4>
+                               <div className="flex items-center gap-4">
+                                  <button className="flex-grow py-4 bg-white/5 hover:bg-primary hover:text-white rounded-2xl text-xs font-black transition-all">詳情</button>
+                                  <button className="p-4 bg-red-500/10 hover:bg-red-500 rounded-2xl text-red-500 hover:text-white transition-all shadow-xl"><Trash2 size={18} /></button>
+                               </div>
                             </div>
                           ))}
                        </div>
@@ -611,13 +714,16 @@ export default function AdminDashboard() {
                                 </tr>
                              </thead>
                              <tbody className="divide-y divide-white/5">
-                                {filteredUsers.map(user => (
+                                {users.length === 0 && (
+                                   <tr><td colSpan={4} className="px-10 py-20 text-center text-white/20 font-black uppercase tracking-widest text-xs">載入會員名冊中或尚無資料...</td></tr>
+                                )}
+                                {filteredUsers.map((user: any) => (
                                   <tr key={user.id} className="group hover:bg-white/[0.02] transition-colors">
                                      <td className="px-10 py-10">
                                         <div className="flex items-center gap-5">
-                                           <div className="w-14 h-14 bg-slate-800 rounded-2xl border-2 border-white/5 flex items-center justify-center font-black text-xl text-white/20">{user.name[0]}</div>
+                                           <div className="w-14 h-14 bg-slate-800 rounded-2xl border-2 border-white/5 flex items-center justify-center font-black text-xl text-white/20">{(user.full_name || user.email || 'A')[0].toUpperCase()}</div>
                                            <div className="space-y-1">
-                                              <p className="text-lg font-black text-white">{user.name}</p>
+                                              <p className="text-lg font-black text-white">{user.full_name || '未設定姓名'}</p>
                                               <p className="text-xs text-white/30 font-medium">{user.email}</p>
                                            </div>
                                         </div>
@@ -627,13 +733,13 @@ export default function AdminDashboard() {
                                            <span className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest ${user.role === 'Professional' ? 'bg-primary/20 text-primary border border-primary/20' : 'bg-white/10 text-white/40 border border-white/10'}`}>
                                               {user.role}
                                            </span>
-                                           {user.permissions.map(p => (
+                                           {(user.permissions || []).map((p: string) => (
                                              <span key={p} className="px-3 py-1 bg-white/5 border border-white/5 rounded-lg text-[9px] font-bold text-white/40">{p}</span>
                                            ))}
                                         </div>
                                      </td>
                                      <td className="px-10 py-10">
-                                        {user.status === 'Verified' ? (
+                                        {user.is_verified ? (
                                            <div className="flex items-center gap-3 text-green-500 bg-green-500/10 w-fit px-4 py-1.5 rounded-full border border-green-500/20">
                                               <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                                               <span className="text-[10px] font-black uppercase tracking-widest">已完全驗證</span>
@@ -648,7 +754,7 @@ export default function AdminDashboard() {
                                      <td className="px-10 py-10 text-right">
                                         <div className="flex items-center justify-end gap-3">
                                            <button onClick={() => setEditItem({ ...user, type: 'user' })} className="p-4 bg-white/5 rounded-2xl text-white/40 hover:bg-white/10 hover:text-white transition-all shadow-inner border border-white/10"><Settings size={18} /></button>
-                                           {user.status === 'Pending' && (
+                                           {!user.is_verified && (
                                               <button className="px-8 py-4 bg-green-500 text-white text-xs font-black rounded-2xl shadow-2xl shadow-green-500/20 hover:scale-105 active:scale-95 transition-all">正式核准進階身份</button>
                                            )}
                                         </div>
@@ -720,18 +826,18 @@ export default function AdminDashboard() {
                            </div>
                            <div className="grid grid-cols-2 gap-8">
                               <div className="space-y-4">
-                               <label className="text-xs font-black text-white/40 uppercase tracking-widest">課程類別</label>
-                               <input className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm" defaultValue={editItem.category} />
+                                <label className="text-xs font-black text-white/40 uppercase tracking-widest">課程類別</label>
+                                <input className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm" defaultValue={editItem.category} />
                               </div>
                               <div className="space-y-4">
-                               <label className="text-xs font-black text-white/40 uppercase tracking-widest">開課價格</label>
-                               <input className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm" defaultValue={editItem.price} />
+                                <label className="text-xs font-black text-white/40 uppercase tracking-widest">開課價格</label>
+                                <input className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm" defaultValue={editItem.price} />
                               </div>
                            </div>
                            <div className="space-y-4">
                               <label className="text-xs font-black text-white/40 uppercase tracking-widest">Syllabus 課程大綱單元</label>
                               <div className="space-y-2">
-                                 {editItem.syllabus.map((s: string, idx: number) => (
+                                 {(editItem.syllabus || []).map((s: string, idx: number) => (
                                     <div key={idx} className="p-5 bg-white/5 border border-white/5 rounded-2xl flex items-center justify-between group">
                                        <span className="text-sm font-bold text-white/60">Stage {idx+1}: {s}</span>
                                        <div className="flex gap-2">
@@ -789,8 +895,8 @@ export default function AdminDashboard() {
                                          <p className="text-sm font-black text-white group-hover:text-accent transition-colors">{p.label}</p>
                                          <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest">{p.desc}</p>
                                       </div>
-                                      <div className={`w-12 h-6 rounded-full p-1 transition-colors ${editItem.permissions.includes(p.id) ? 'bg-green-500' : 'bg-white/10'}`}>
-                                         <div className={`w-4 h-4 bg-white rounded-full transition-transform ${editItem.permissions.includes(p.id) ? 'translate-x-6' : 'translate-x-0'}`} />
+                                      <div className={`w-12 h-6 rounded-full p-1 transition-colors ${(editItem.permissions || []).includes(p.id) ? 'bg-green-500' : 'bg-white/10'}`}>
+                                         <div className={`w-4 h-4 bg-white rounded-full transition-transform ${(editItem.permissions || []).includes(p.id) ? 'translate-x-6' : 'translate-x-0'}`} />
                                       </div>
                                    </div>
                                  ))}
