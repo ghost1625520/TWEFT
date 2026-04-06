@@ -1,5 +1,4 @@
-'use client';
-
+import React, { useEffect, useState } from 'react';
 import { SubpageHero } from '@/components/SubpageHero';
 import { motion } from 'motion/react';
 import { 
@@ -11,10 +10,12 @@ import {
   Layers,
   Lock
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { ModuleRenderer, type ModuleData } from '@/components/ModuleRenderer';
 
 const categories = ['學術論文', '臨床影音', '中文教材', '國際文獻', '工具清單'];
 
-const resources = [
+const staticResources = [
   {
     type: 'PDF',
     title: 'EFT 治療核心成效研究綜述 (2024 更新版)',
@@ -50,6 +51,29 @@ const resources = [
 ];
 
 export default function ResourcesPage() {
+  const [modules, setModules] = useState<ModuleData[] | null>(null);
+
+  useEffect(() => {
+    async function fetchPage() {
+      const { data } = await supabase
+        .from('cms_pages')
+        .select('modules')
+        .eq('slug', 'resources')
+        .single();
+      
+      if (data && data.modules) setModules(data.modules);
+    }
+    fetchPage();
+  }, []);
+
+  if (modules && modules.length > 0) {
+    return (
+      <main className="bg-[#FBFCFD] pt-20">
+        <ModuleRenderer modules={modules} />
+      </main>
+    );
+  }
+
   return (
     <main className="bg-[#FBFCFD]">
       <SubpageHero 
@@ -112,7 +136,7 @@ export default function ResourcesPage() {
            </motion.div>
 
            {/* List of resources */}
-           {resources.map((res, i) => (
+           {staticResources.map((res: any, i: number) => (
              <motion.div
                key={i}
                initial={{ opacity: 0, y: 30 }}

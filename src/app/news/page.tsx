@@ -1,5 +1,4 @@
-'use client';
-
+import React, { useEffect, useState } from 'react';
 import { SubpageHero } from '@/components/SubpageHero';
 import { motion } from 'motion/react';
 import Link from 'next/link';
@@ -12,8 +11,9 @@ import {
   Megaphone,
   Trophy
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
-const newsItems = [
+const staticNewsItems = [
   {
     type: '公告',
     title: '2026 年度國際導師專題演講：EFT 在數位時代的挑戰',
@@ -45,6 +45,32 @@ const newsItems = [
 ];
 
 export default function NewsPage() {
+  const [news, setNews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchNews() {
+      try {
+        const { data, error } = await supabase
+          .from('news')
+          .select('*')
+          .order('date', { ascending: false });
+        
+        if (data && data.length > 0) {
+          setNews(data);
+        } else {
+          setNews(staticNewsItems);
+        }
+      } catch (err) {
+        console.error("Error fetching news:", err);
+        setNews(staticNewsItems);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchNews();
+  }, []);
+
   return (
     <main className="bg-white">
       <SubpageHero 
@@ -57,7 +83,7 @@ export default function NewsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
           {/* Main Feed */}
           <div className="lg:col-span-2 space-y-12">
-            {newsItems.map((news, i) => (
+            {news.map((item: any, i: number) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, x: -30 }}
@@ -67,27 +93,27 @@ export default function NewsPage() {
                 className="group flex flex-col sm:flex-row gap-8 border-b border-dark/5 pb-12 hover:border-primary/20 transition-all"
               >
                 <div className="sm:w-32 shrink-0 space-y-2">
-                   <div className="text-sm font-bold text-dark/30 uppercase tracking-widest">{news.date.split('/')[1]}月 {news.date.split('/')[2]}日</div>
+                   <div className="text-sm font-bold text-dark/30 uppercase tracking-widest">{item.date.split('/')[1] || '04'}月 {item.date.split('/')[2] || '01'}日</div>
                    <div className="w-16 h-1 bg-primary/20 rounded-full group-hover:w-full transition-all duration-700" />
-                   <div className="text-3xl font-black text-dark/10 group-hover:text-primary/20 transition-colors">{news.date.split('/')[0]}</div>
+                   <div className="text-3xl font-black text-dark/10 group-hover:text-primary/20 transition-colors">{item.date.split('/')[0] || '2026'}</div>
                 </div>
                 <div className="space-y-4 flex-grow">
                    <div className="flex items-center gap-3">
                       <span className={`px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
-                        news.type === '公告' ? 'bg-primary text-white' :
-                        news.type === '課程' ? 'bg-accent text-dark' :
-                        news.type === '獲獎' ? 'bg-purple-100 text-purple-700' :
+                        item.type === '公告' ? 'bg-primary text-white' :
+                        item.type === '課程' ? 'bg-accent text-dark' :
+                        item.type === '獲獎' ? 'bg-purple-100 text-purple-700' :
                         'bg-dark/5 text-dark/60'
                       }`}>
-                        {news.type}
+                        {item.type}
                       </span>
-                      <span className="text-xs font-bold text-primary tracking-widest uppercase">{news.tag}</span>
+                      <span className="text-xs font-bold text-primary tracking-widest uppercase">{item.tag}</span>
                    </div>
                    <h3 className="text-2xl font-bold text-dark group-hover:text-primary transition-colors leading-tight">
-                     {news.title}
+                     {item.title}
                    </h3>
                    <p className="text-dark/60 leading-relaxed max-w-2xl">
-                     {news.description}
+                     {item.description}
                    </p>
                    <Link href={`/news/${i}`} className="flex items-center gap-2 text-dark font-bold hover:gap-4 transition-all text-sm group-hover:text-primary">
                      閱讀更多全文

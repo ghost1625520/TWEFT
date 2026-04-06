@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
 import { 
   Settings, 
   Users, 
@@ -32,7 +33,8 @@ import {
   Zap,
   Clock,
   MessageCircle,
-  ArrowRight
+  ArrowRight,
+  Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ModuleRenderer, type ModuleData, type ModuleType } from '@/components/ModuleRenderer';
@@ -43,17 +45,9 @@ export default function AdminDashboard() {
   const [viewMode, setViewMode] = useState<'edit' | 'preview'>('edit');
   const [searchQuery, setSearchQuery] = useState('');
   
-  // --- CMS STATE ---
-  const [siteData, setSiteData] = useState<{ [key: string]: ModuleData[] }>({
-    'home': [
-      { id: '1', type: 'HeroSlider', title: '情緒焦點治療的核心殿堂', subtitle: 'ASIA EFT CENTER', content: '我們致力於推廣以科學實證為基礎的治療模式，協助心理專業人員深化情感連接。' },
-      { id: '2', type: 'Stats', items: [{ label: '結業學員', value: '2,500+' }, { label: '認證心理師', value: '180+' }] },
-    ],
-    'about': [{ id: 'a1', type: 'TextContent', title: '關於學會', content: '臺灣EFT治療學會是國際認證的專屬機構...' }],
-    'courses': [{ id: 'c1', type: 'PricingGrid', title: '選取您的學習路徑' }],
-    'resources': [{ id: 'r1', type: 'MasonryGallery', title: '資源下載專區', items: [] }]
-  });
-
+  const [siteData, setSiteData] = useState<{ [key: string]: ModuleData[] }>({});
+  const [loading, setLoading] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [currentPage, setCurrentPage] = useState('home');
   const pageModules = siteData[currentPage] || [];
 
@@ -73,7 +67,57 @@ export default function AdminDashboard() {
     { id: 'u2', name: '李華', email: 'hua@example.com', role: 'Professional', status: 'Verified', permissions: ['edit_cms', 'manage_courses'] }
   ]);
 
-  const [editItem, setEditItem] = useState<any>(null); // For modals
+  const [editItem, setEditItem] = useState<any>(null);
+
+  // --- DATABASE SYNC ---
+  useEffect(() => {
+    fetchPageData(currentPage);
+  }, [currentPage]);
+
+  const fetchPageData = async (slug: string) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('cms_pages')
+        .select('*')
+        .eq('slug', slug)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      
+      if (data) {
+        setSiteData(prev => ({ ...prev, [slug]: data.modules }));
+      } else {
+        setSiteData(prev => ({ ...prev, [slug]: prev[slug] || [] }));
+      }
+    } catch (err) {
+      console.error('Error fetching page data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePublish = async () => {
+    setSaveStatus('saving');
+    try {
+      const { error } = await supabase
+        .from('cms_pages')
+        .upsert({
+          slug: currentPage,
+          title: pagesMap.find(p => p.id === currentPage)?.label || currentPage,
+          modules: siteData[currentPage],
+          is_published: true,
+          last_updated_at: new Date().toISOString()
+        }, { onConflict: 'slug' });
+
+      if (error) throw error;
+      setSaveStatus('success');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    } catch (err) {
+      console.error('Error saving page:', err);
+      setSaveStatus('error');
+    }
+  };
 
   // --- CMS ACTIONS ---
   const addModule = (type: ModuleType) => {
@@ -86,6 +130,12 @@ export default function AdminDashboard() {
       items: type === 'Stats' ? [{ label: '數據', value: '0' }] : type === 'PricingGrid' ? [{title: '課程等級', price: 'NT$ 0'}] : ['新項目 1']
     };
     setSiteData({ ...siteData, [currentPage]: [...pageModules, newModule] });
+  };
+
+  const updateModule = (index: number, data: Partial<ModuleData>) => {
+    const newModules = [...pageModules];
+    newModules[index] = { ...newModules[index], ...data };
+    setSiteData({ ...siteData, [currentPage]: newModules });
   };
 
   const removeModule = (id: string | number) => {
@@ -107,6 +157,8 @@ export default function AdminDashboard() {
     { id: 'cms', label: '頁面編輯', icon: Layout },
     { id: 'course_mgr', label: '課程大綱', icon: BookOpen },
     { id: 'news_mgr', label: '消息管理', icon: List },
+    { id: 'orders', label: '訂單審核', icon: ShoppingCart },
+    { id: 'downloads', label: '資源管理', icon: Download },
     { id: 'users', label: '會員審核', icon: Users },
     { id: 'settings', label: '權限設定', icon: ShieldCheck },
   ];
@@ -116,7 +168,7 @@ export default function AdminDashboard() {
     { id: 'about', label: '關於學會' },
     { id: 'eft-intro', label: '什麼是 EFT' },
     { id: 'courses', label: '課程總覽' },
-    { id: 'news', label: '消息消息' },
+    { id: 'news', label: '最新消息' },
     { id: 'faculty', label: '師資團隊' },
     { id: 'resources', label: '下載專區' },
     { id: 'membership', label: '加入會員' },
@@ -167,9 +219,15 @@ export default function AdminDashboard() {
                 <Eye size={14} /> PREVIEW
               </button>
            </div>
-           <button className="px-8 py-4 bg-primary text-white rounded-2xl text-sm font-black shadow-2xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3">
-              <Save size={18} /> 同步發佈
-           </button>
+            <button 
+              onClick={handlePublish}
+              disabled={saveStatus === 'saving'}
+              className={`px-8 py-4 ${saveStatus === 'success' ? 'bg-green-500' : 'bg-primary'} text-white rounded-2xl text-sm font-black shadow-2xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50`}
+            >
+              {saveStatus === 'saving' ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 
+               saveStatus === 'success' ? <CheckCircle2 size={18} /> : <Save size={18} />}
+              {saveStatus === 'saving' ? '發佈中...' : saveStatus === 'success' ? '發佈完成' : '同步發佈'}
+            </button>
         </div>
       </div>
 
@@ -280,8 +338,18 @@ export default function AdminDashboard() {
                                            <span className="px-3 py-1 bg-primary text-white text-[9px] font-black uppercase tracking-[0.2em] rounded-md">Template: {module.type}</span>
                                            {module.background && <span className="px-3 py-1 bg-white/10 text-white/60 text-[9px] font-black uppercase tracking-[0.2em] rounded-md">Style: {module.background}</span>}
                                         </div>
-                                        <input className="text-4xl font-black text-white bg-transparent border-none p-0 focus:ring-0 w-full placeholder:text-white/10" defaultValue={module.title} placeholder="輸入主標題..." />
-                                        <input className="text-sm font-bold text-primary/60 bg-transparent border-none p-0 focus:ring-0 w-full uppercase tracking-widest placeholder:text-white/5" defaultValue={module.subtitle} placeholder="輸入小標題或核心分類..." />
+                                        <input 
+                                          className="text-4xl font-black text-white bg-transparent border-none p-0 focus:ring-0 w-full placeholder:text-white/10" 
+                                          value={module.title || ''} 
+                                          onChange={(e) => updateModule(i, { title: e.target.value })}
+                                          placeholder="輸入主標題..." 
+                                        />
+                                        <input 
+                                          className="text-sm font-bold text-primary/60 bg-transparent border-none p-0 focus:ring-0 w-full uppercase tracking-widest placeholder:text-white/5" 
+                                          value={module.subtitle || ''} 
+                                          onChange={(e) => updateModule(i, { subtitle: e.target.value })}
+                                          placeholder="輸入小標題或核心分類..." 
+                                        />
                                      </div>
                                      
                                      <div className="space-y-4">
@@ -289,7 +357,12 @@ export default function AdminDashboard() {
                                            <Type size={12} className="text-white/20 group-hover/label:text-primary transition-colors" />
                                            <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">內容描述與文案區域</label>
                                         </div>
-                                        <textarea defaultValue={module.content} rows={4} className="w-full bg-white/5 border border-white/10 rounded-3xl px-8 py-6 text-base text-white/60 focus:border-primary outline-none focus:text-white transition-all shadow-inner focus:shadow-primary/5" />
+                                        <textarea 
+                                          value={module.content || ''} 
+                                          onChange={(e) => updateModule(i, { content: e.target.value })}
+                                          rows={4} 
+                                          className="w-full bg-white/5 border border-white/10 rounded-3xl px-8 py-6 text-base text-white/60 focus:border-primary outline-none focus:text-white transition-all shadow-inner focus:shadow-primary/5" 
+                                        />
                                      </div>
 
                                      {module.items && (
@@ -310,7 +383,7 @@ export default function AdminDashboard() {
                                </div>
                             </motion.div>
                           ))}
-                          <button onClick={() => addModule('Hero')} className="w-full py-20 border-4 border-dashed border-white/5 rounded-[4rem] flex flex-col items-center justify-center gap-4 text-white/20 hover:border-primary/40 hover:text-primary transition-all group">
+                          <button onClick={() => addModule('HeroSlider')} className="w-full py-20 border-4 border-dashed border-white/5 rounded-[4rem] flex flex-col items-center justify-center gap-4 text-white/20 hover:border-primary/40 hover:text-primary transition-all group">
                              <div className="w-16 h-16 bg-white/5 rounded-3xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all scale-110 group-hover:rotate-12">
                                 <Plus size={32} />
                              </div>
@@ -403,6 +476,64 @@ export default function AdminDashboard() {
                     </motion.div>
                   )}
 
+                  {activeTab === 'orders' && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
+                       <div className="flex items-end justify-between">
+                          <div>
+                             <h2 className="text-5xl font-black text-white">訂單與金流對帳</h2>
+                             <p className="text-white/40 font-bold mt-2 uppercase tracking-widest text-xs">Manage Course Enrollments & Fees</p>
+                          </div>
+                       </div>
+                       <div className="bg-white/5 border border-white/5 rounded-[3rem] overflow-hidden">
+                          <table className="w-full text-left">
+                             <thead className="bg-white/5 text-[10px] font-black uppercase tracking-widest text-white/40">
+                                <tr>
+                                   <th className="px-10 py-8">訂單編號/日期</th>
+                                   <th className="px-10 py-8">會員名稱</th>
+                                   <th className="px-10 py-8">對應項目</th>
+                                   <th className="px-10 py-8 text-right">操作</th>
+                                </tr>
+                             </thead>
+                             <tbody className="divide-y divide-white/5">
+                                {[
+                                  { id: 'ORD-8821', user: '陳大文', item: 'EFT 國際認證初階' },
+                                  { id: 'ORD-8820', user: '林美玲', item: '專業會員年費' }
+                                ].map(ord => (
+                                  <tr key={ord.id} className="hover:bg-white/5 transition-colors">
+                                     <td className="px-10 py-8 font-bold">{ord.id}</td>
+                                     <td className="px-10 py-8 font-black">{ord.user}</td>
+                                     <td className="px-10 py-8 text-white/40">{ord.item}</td>
+                                     <td className="px-10 py-8 text-right">
+                                        <button className="px-6 py-2 bg-white/5 rounded-xl text-xs font-black">詳情</button>
+                                     </td>
+                                  </tr>
+                                ))}
+                             </tbody>
+                          </table>
+                       </div>
+                    </motion.div>
+                  )}
+
+                  {activeTab === 'downloads' && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
+                       <div className="flex items-end justify-between">
+                          <h2 className="text-5xl font-black text-white">資源管理中心</h2>
+                          <button className="px-10 py-5 bg-primary text-white font-black rounded-2xl flex items-center gap-3">
+                             <Plus size={20} /> 上傳資源
+                          </button>
+                       </div>
+                       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                          {['認證手冊.pdf', '臨床影音.mp4'].map((file, i) => (
+                            <div key={i} className="p-10 bg-white/5 border border-white/5 rounded-[3rem] space-y-6">
+                               <FileText size={32} className="text-primary" />
+                               <h4 className="text-xl font-black">{file}</h4>
+                               <button className="w-full py-4 bg-white/5 rounded-2xl text-xs font-black">編輯權限</button>
+                            </div>
+                          ))}
+                       </div>
+                    </motion.div>
+                  )}
+
                   {activeTab === 'users' && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
                        <div className="flex items-end justify-between">
@@ -486,7 +617,6 @@ export default function AdminDashboard() {
                   )}
                </AnimatePresence>
             ) : (
-               /* Preview Mode - Simplified Visual Wrapper */
                <div className="space-y-12">
                   <div className="flex items-center justify-between">
                      <h2 className="text-3xl font-black">即時預覽：{pagesMap.find(p => p.id === currentPage)?.label}</h2>
@@ -510,7 +640,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Detail Editor Modal - Replaces the frozen UI feeling */}
       <AnimatePresence>
         {editItem && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-12 backdrop-blur-3xl bg-black/60">
@@ -520,7 +649,6 @@ export default function AdminDashboard() {
                exit={{ opacity: 0, scale: 0.95, y: 30 }}
                className="bg-[#141416] border border-white/10 w-full max-w-5xl rounded-[4rem] shadow-[0_50px_150px_rgba(0,0,0,0.8)] overflow-hidden flex"
              >
-                {/* Modal Sidebar */}
                 <div className="w-1/3 bg-black/40 border-r border-white/5 p-12 space-y-12">
                    <div className="space-y-4">
                       <div className="w-20 h-20 bg-primary/20 rounded-[2.5rem] flex items-center justify-center text-primary shadow-2xl">
@@ -537,7 +665,6 @@ export default function AdminDashboard() {
                    </div>
                 </div>
 
-                {/* Modal Content */}
                 <div className="flex-grow p-16 overflow-y-auto max-h-[85vh] custom-scrollbar bg-gradient-to-br from-transparent to-primary/5">
                    <div className="space-y-10">
                       {editItem.type === 'course' && (

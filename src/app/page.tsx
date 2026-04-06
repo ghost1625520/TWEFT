@@ -1,12 +1,64 @@
-'use client';
-
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { ArrowRight, BookOpen, Users, Award, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
+import { ModuleRenderer, type ModuleData } from "@/components/ModuleRenderer";
 
 export default function Home() {
+  const [modules, setModules] = useState<ModuleData[] | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchPage() {
+      try {
+        const { data, error } = await supabase
+          .from('cms_pages')
+          .select('modules')
+          .eq('slug', 'home')
+          .single();
+        
+        if (data && data.modules) {
+          setModules(data.modules);
+        }
+      } catch (err) {
+        console.error("Error fetching homepage modules:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchPage();
+  }, []);
+
+  // If we have modules from the database, use the renderer
+  if (modules && modules.length > 0) {
+    return (
+      <div className="flex flex-col pt-20">
+        <ModuleRenderer modules={modules} />
+        
+        {/* Persistent CTA at the bottom even if CMS is used */}
+        <section className="py-24 bg-primary text-dark relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-1/3 h-full bg-accent/20 skew-x-12 translate-x-1/2" />
+          <div className="relative max-w-5xl mx-auto px-6 lg:px-8 text-center">
+            <h2 className="text-4xl md:text-5xl font-bold mb-8">準備好開啟你的 EFT 專業旅程了嗎？</h2>
+            <p className="text-xl mb-12 text-dark/70 font-medium">加入 500+ 位專業治療師行列，從這裡開始你的國際認證之路。</p>
+            <div className="flex flex-wrap justify-center gap-6">
+              <Link href="/membership" className="px-10 py-5 bg-dark text-white font-bold rounded-full hover:scale-105 transition-all shadow-2xl">
+                申請加入會員
+              </Link>
+              <Link href="/contact" className="px-10 py-5 bg-white text-dark font-bold rounded-full hover:bg-slate-50 transition-all border border-dark/10">
+                聯繫秘書處
+              </Link>
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  // Fallback to static content if no DB record found
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
