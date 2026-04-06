@@ -36,8 +36,13 @@ import {
   ArrowRight,
   Download
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ModuleRenderer, type ModuleData, type ModuleType } from '@/components/ModuleRenderer';
+
+// --- NEW ADMIN COMPONENTS ---
+import CourseForm from '@/components/admin/CourseForm';
+import NewsForm from '@/components/admin/NewsForm';
+import ModuleEditor from '@/components/admin/ModuleEditor';
 
 export default function AdminDashboard() {
   const { profile } = useAuth();
@@ -77,7 +82,7 @@ export default function AdminDashboard() {
       { id: 'ab2', type: 'ImageTextGrid', title: '學會發展史', subtitle: 'Since 2013', content: '我們從最初的一群熱血治療師，發展至今已成為國際認證的專業培訓基地。' }
     ],
     'eft-intro': [
-      { id: 'eft1', type: 'HeroSlider', title: '認識情緒焦點治療', subtitle: 'What is EFT?', content: 'EFT 是一套基於依附理論的短期治療。它不僅處理衝突，更是在情緒的「涵容之海」中學會自在遨遊，而不被強大的情感洪流所「淹沒」。', background: 'primary-light' },
+      { id: 'eft1', type: 'HeroSlider', title: '認識情緒焦點治療', subtitle: 'What is EFT?', content: 'EFT 是一套基於依附理論的短期治療。', background: 'primary-light' },
       { id: 'eft2', type: 'VideoSection', title: 'EFT 治療現場預覽', subtitle: 'The Power of Connection', content: '透過影片了解我們如何看見情緒背後的訊息。' }
     ],
     membership: [
@@ -89,8 +94,11 @@ export default function AdminDashboard() {
       { id: 'r2', type: 'Features', title: '精選文獻', items: [{title: 'EFT 成效研究綜述', description: '2024 更新版'}, {title: '伴侶諮商評估量表', description: '中文版'}] }
     ],
     contact: [
-      { id: 'c1', type: 'HeroSlider', title: '與我們聯繫', subtitle: 'Contact Us', content: '如果您有任何課程、認證或合作需求，歡迎來信洽詢。', background: 'dark' },
+      { id: 'c1', type: 'HeroSlider', title: '與我們聯繫', subtitle: 'Contact Us', content: '如果您有任何需求，歡迎來信洽詢。', background: 'dark' },
       { id: 'c2', type: 'ImageTextGrid', title: '辦公室資訊', subtitle: 'Location', content: '台北市大安區... (地址建置中)' }
+    ],
+    international: [
+      { id: 'int1', type: 'HeroSlider', title: '國際連結：與全球接軌', subtitle: 'Global Connection', content: 'twEFT 與國際 ICEEFT 緊密合作，確保教學品質與國際標準同步。', background: 'dark' }
     ]
   };
 
@@ -132,7 +140,6 @@ export default function AdminDashboard() {
       if (data && data.modules && data.modules.length > 0) {
         setSiteData(prev => ({ ...prev, [slug]: data.modules }));
       } else {
-        // Fallback to INITIAL_LAYOUTS if database is empty or row doesn't exist
         const defaultLayout = INITIAL_LAYOUTS[slug] || [];
         setSiteData(prev => ({ ...prev, [slug]: defaultLayout }));
       }
@@ -141,19 +148,6 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getDay = (dateStr: string) => {
-    if (!dateStr || !dateStr.includes('-')) return '01';
-    return dateStr.split('-')[2] || '01';
-  };
-
-  const getMonth = (dateStr: string) => {
-    if (!dateStr || !dateStr.includes('-')) return 'MAR';
-    const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-    const parts = dateStr.split('-');
-    const m = parseInt(parts[1]);
-    return months[m-1] || 'MAR';
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -183,7 +177,7 @@ export default function AdminDashboard() {
       fetchGlobalData();
     } catch (err) {
       console.error('Error uploading file:', err);
-      showToast('上傳失敗，請檢查儲存空間或權限。', 'error');
+      showToast('上傳失敗', 'error');
     } finally {
       setLoading(false);
     }
@@ -193,6 +187,79 @@ export default function AdminDashboard() {
     if (confirm('確定要恢復此頁面的初始模板嗎？這將覆蓋您目前尚未儲存的所有編輯。')) {
       const defaultLayout = INITIAL_LAYOUTS[currentPage] || [];
       setSiteData({ ...siteData, [currentPage]: defaultLayout });
+    }
+  };
+
+  // --- DATA MUTATIONS ---
+  const handleSaveCourse = async (courseData: any) => {
+    setLoading(true);
+    try {
+      const { id, type, ...rest } = courseData;
+      const { error } = id 
+        ? await supabase.from('courses').update(rest).eq('id', id)
+        : await supabase.from('courses').insert([rest]);
+
+      if (error) throw error;
+      showToast(id ? '課程已更新' : '新課程已發佈');
+      setEditItem(null);
+      fetchGlobalData();
+    } catch (err) {
+      console.error('Error saving course:', err);
+      showToast('儲存失敗', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveNews = async (newsData: any) => {
+    setLoading(true);
+    try {
+      const { id, type, ...rest } = newsData;
+      const { error } = id 
+        ? await supabase.from('news').update(rest).eq('id', id)
+        : await supabase.from('news').insert([rest]);
+
+      if (error) throw error;
+      showToast(id ? '公告已更新' : '新消息已發佈');
+      setEditItem(null);
+      fetchGlobalData();
+    } catch (err) {
+      console.error('Error saving news:', err);
+      showToast('儲存失敗', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyUser = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_verified: true })
+        .eq('id', userId);
+
+      if (error) throw error;
+      showToast('會員已成功核准並開啟進階權限');
+      fetchGlobalData();
+    } catch (err) {
+      console.error('Error verifying user:', err);
+      showToast('操作失敗', 'error');
+    }
+  };
+
+  const handleApproveOrder = async (orderId: string) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: 'approved' })
+        .eq('id', orderId);
+
+      if (error) throw error;
+      showToast('訂單已核准，會員權限已開通');
+      fetchGlobalData();
+    } catch (err) {
+      console.error('Error approving order:', err);
+      showToast('核准失敗', 'error');
     }
   };
 
@@ -224,9 +291,9 @@ export default function AdminDashboard() {
       id: Date.now().toString(),
       type,
       title: `新 ${type} 模塊`,
-      subtitle: '更精彩的小標題',
-      content: '在此輸入內容與描述...',
-      items: type === 'Stats' ? [{ label: '數據', value: '0' }] : type === 'PricingGrid' ? [{title: '課程等級', price: 'NT$ 0'}] : ['新項目 1']
+      subtitle: '編輯小標題',
+      content: '在此輸入描述...',
+      items: type === 'Stats' ? [{ label: '新數據', value: '100' }] : []
     };
     setSiteData({ ...siteData, [currentPage]: [...pageModules, newModule] });
   };
@@ -249,12 +316,6 @@ export default function AdminDashboard() {
     setSiteData({ ...siteData, [currentPage]: newModules });
   };
 
-  // --- DATA HELPERS ---
-  const filteredUsers = users.filter(u => 
-    (u.full_name || '').includes(searchQuery) || 
-    (u.email || '').includes(searchQuery)
-  );
-
   const tabs = [
     { id: 'dashboard', label: '總覽', icon: Monitor },
     { id: 'cms', label: '頁面編輯', icon: Layout },
@@ -270,6 +331,7 @@ export default function AdminDashboard() {
     { id: 'home', label: '首頁' },
     { id: 'about', label: '關於學會' },
     { id: 'eft-intro', label: '什麼是 EFT' },
+    { id: 'international', label: '國際連結' },
     { id: 'courses', label: '課程總覽' },
     { id: 'news', label: '最新消息' },
     { id: 'faculty', label: '師資團隊' },
@@ -279,29 +341,27 @@ export default function AdminDashboard() {
   ];
 
   const moduleTemplates: { type: ModuleType; label: string; icon: any }[] = [
-    { type: 'HeroSlider', label: '頂級輪播', icon: Monitor },
+    { type: 'HeroSlider', label: '大氣輪播', icon: Monitor },
     { type: 'ImageTextGrid', label: '圖文排列', icon: Layout },
-    { type: 'MasonryGallery', label: '影像藝廊', icon: ImageIcon },
     { type: 'Features', label: '功能特性', icon: Zap },
-    { type: 'Stats', label: '成就數據', icon: CheckCircle2 },
+    { type: 'Stats', label: '數據統計', icon: CheckCircle2 },
     { type: 'Timeline', label: '發展時序', icon: Clock },
-    { type: 'PricingGrid', label: '課程方案', icon: CreditCard },
-    { type: 'VideoSection', label: '影片主覺', icon: Play },
-    { type: 'FAQ', label: '常見問題', icon: MessageCircle },
-    { type: 'TextContent', label: '純文版塊', icon: Type }
+    { type: 'PricingGrid', label: '方案報價', icon: CreditCard },
+    { type: 'FAQ', label: '常見問題', icon: MessageCircle }
   ];
 
   return (
     <div className="min-h-screen bg-[#0E1B22] flex flex-col pt-32 px-12 pb-20 text-white selection:bg-primary selection:text-white">
       {/* Toast Notification */}
       {toast && (
-        <div className={`fixed top-8 right-8 z-[200] px-8 py-4 rounded-2xl font-bold text-sm shadow-2xl flex items-center gap-3 transition-all ${
+        <div className={`fixed top-8 right-8 z-[500] px-8 py-4 rounded-2xl font-bold text-sm shadow-2xl flex items-center gap-3 transition-all ${
           toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
         }`}>
           {toast.type === 'success' ? <CheckCircle2 size={18} /> : <X size={18} />}
           {toast.msg}
         </div>
       )}
+
       {/* Header */}
       <div className="flex items-center justify-between mb-12">
         <div className="flex items-center gap-6">
@@ -310,53 +370,27 @@ export default function AdminDashboard() {
           </div>
           <div>
             <h1 className="text-4xl font-black tracking-tight">twEFT Command Center</h1>
-            <div className="flex items-center gap-2 mt-1">
-               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-               <p className="text-white/40 font-bold uppercase tracking-[0.2em] text-[10px]">System Administrator v2.0 • Live Online</p>
-            </div>
+            <p className="text-white/40 font-bold uppercase tracking-[0.2em] text-[10px] mt-1">Live Management v2.5</p>
           </div>
         </div>
         <div className="flex items-center gap-4">
-           <div className="flex items-center bg-white/5 rounded-2xl p-1.5 border border-white/5 transition-all hover:border-white/10">
-              <button 
-                onClick={() => setViewMode('edit')}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-xs transition-all ${viewMode === 'edit' ? 'bg-white text-dark shadow-xl' : 'text-white/40 hover:text-white'}`}
-              >
-                <Monitor size={14} /> EDITOR
-              </button>
-              <button 
-                onClick={() => setViewMode('preview')}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-xs transition-all ${viewMode === 'preview' ? 'bg-accent text-dark shadow-xl' : 'text-white/40 hover:text-white'}`}
-              >
-                <Eye size={14} /> PREVIEW
-              </button>
-           </div>
-            <button 
-              onClick={handlePublish}
-              disabled={saveStatus === 'saving'}
-              className={`px-8 py-4 ${saveStatus === 'success' ? 'bg-green-500' : 'bg-primary'} text-white rounded-2xl text-sm font-black shadow-2xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50`}
-            >
-              {saveStatus === 'saving' ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 
-               saveStatus === 'success' ? <CheckCircle2 size={18} /> : <Save size={18} />}
-              {saveStatus === 'saving' ? '發佈中...' : saveStatus === 'success' ? '發佈完成' : '同步發佈'}
-            </button>
+           {activeTab === 'cms' && (
+             <div className="flex items-center bg-white/5 rounded-2xl p-1.5 border border-white/5">
+                <button onClick={() => setViewMode('edit')} className={`px-5 py-2.5 rounded-xl font-black text-xs transition-all ${viewMode === 'edit' ? 'bg-white text-dark' : 'text-white/40'}`}>EDITOR</button>
+                <button onClick={() => setViewMode('preview')} className={`px-5 py-2.5 rounded-xl font-black text-xs transition-all ${viewMode === 'preview' ? 'bg-accent text-dark' : 'text-white/40'}`}>PREVIEW</button>
+             </div>
+           )}
+           <button onClick={handlePublish} disabled={saveStatus === 'saving'} className="px-8 py-4 bg-primary text-white rounded-2xl text-sm font-black shadow-2xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+             {saveStatus === 'saving' ? '儲存中...' : '同步發佈'}
+           </button>
         </div>
       </div>
 
-      {/* Main Navigation Tabs */}
-      <div className="flex items-center gap-2 p-1.5 bg-white/5 border border-white/5 rounded-[2rem] w-fit mb-12 backdrop-blur-3xl overflow-x-auto max-w-full">
+      {/* Tabs */}
+      <div className="flex items-center gap-2 p-1.5 bg-white/5 border border-white/5 rounded-[2rem] w-fit mb-12 overflow-x-auto max-w-full">
         {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-10 py-4 rounded-[1.5rem] text-sm font-black transition-all flex items-center gap-3 whitespace-nowrap ${
-              activeTab === tab.id 
-                ? 'bg-primary text-white shadow-2xl shadow-primary/20 translate-y-[-2px]' 
-                : 'text-white/30 hover:text-white/70 hover:bg-white/5'
-            }`}
-          >
-            <tab.icon size={18} className={activeTab === tab.id ? 'animate-bounce' : ''} />
-            {tab.label}
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-10 py-4 rounded-[1.5rem] text-sm font-black transition-all flex items-center gap-3 whitespace-nowrap ${activeTab === tab.id ? 'bg-primary text-white shadow-2xl shadow-primary/20 translate-y-[-2px]' : 'text-white/30 hover:text-white/70 hover:bg-white/5'}`}>
+            <tab.icon size={18} /> {tab.label}
           </button>
         ))}
       </div>
@@ -364,628 +398,264 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
         {activeTab === 'cms' && (
           <aside className="lg:col-span-1 space-y-8 h-fit sticky top-40">
-             {/* Page Selector */}
-             <div className="p-8 bg-white/5 border border-white/5 rounded-[3rem] space-y-6 shadow-2xl backdrop-blur-2xl">
-                <div className="space-y-4">
-                   <h3 className="text-[11px] font-black text-white/20 uppercase tracking-[0.4em]">管理頁面架構</h3>
-                   <div className="grid grid-cols-1 gap-1.5">
-                      {pagesMap.map((p) => (
-                        <button 
-                          key={p.id} 
-                          onClick={() => setCurrentPage(p.id)}
-                          className={`w-full text-left px-5 py-3.5 rounded-2xl text-xs font-black transition-all flex items-center justify-between group border ${currentPage === p.id ? 'bg-primary/20 text-primary border-primary/20' : 'text-white/30 border-transparent hover:bg-white/5 hover:text-white'}`}
-                        >
-                           {p.label}
-                           <ArrowRight size={14} className={`transition-transform ${currentPage === p.id ? 'translate-x-0' : 'translate-x-[-10px] opacity-0 group-hover:opacity-100 group-hover:translate-x-0'}`} />
-                        </button>
-                      ))}
-                   </div>
+             <div className="p-8 bg-white/5 border border-white/5 rounded-[3rem] space-y-6 shadow-2xl">
+                <h3 className="text-[11px] font-black text-white/20 uppercase tracking-[0.4em]">頁面導覽</h3>
+                <div className="grid grid-cols-1 gap-1.5">
+                   {pagesMap.map(p => (
+                     <button key={p.id} onClick={() => setCurrentPage(p.id)} className={`w-full text-left px-5 py-3.5 rounded-2xl text-xs font-black transition-all ${currentPage === p.id ? 'bg-primary/20 text-primary border border-primary/20' : 'text-white/30 border-transparent hover:bg-white/5'}`}>{p.label}</button>
+                   ))}
                 </div>
              </div>
-
-             {/* Module Library */}
-             <div className="p-8 bg-white/5 border border-white/5 rounded-[3rem] space-y-6 shadow-2xl backdrop-blur-2xl">
-                <div className="space-y-4">
-                   <h3 className="text-[11px] font-black text-white/20 uppercase tracking-[0.4em]">新增區塊模板</h3>
-                   <div className="grid grid-cols-1 gap-2">
-                      {moduleTemplates.map((m) => (
-                        <button 
-                          key={m.type}
-                          onClick={() => addModule(m.type)}
-                          className="flex items-center gap-4 p-4 bg-white/5 border border-white/5 rounded-2xl text-[11px] font-black text-white/50 hover:border-primary hover:text-white hover:bg-white/10 transition-all group"
-                        >
-                           <div className="p-2.5 bg-white/5 rounded-xl group-hover:bg-primary group-hover:text-white transition-all shadow-inner">
-                              <m.icon size={16} />
-                           </div>
-                           <span>{m.label}</span>
-                           <Plus size={14} className="ml-auto opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all" />
-                        </button>
-                      ))}
-                   </div>
+             <div className="p-8 bg-white/5 border border-white/5 rounded-[3rem] space-y-6 shadow-2xl">
+                <h3 className="text-[11px] font-black text-white/20 uppercase tracking-[0.4em]">模組庫</h3>
+                <div className="grid grid-cols-1 gap-2">
+                   {moduleTemplates.map(m => (
+                     <button key={m.type} onClick={() => addModule(m.type)} className="flex items-center gap-4 p-4 bg-white/5 border border-white/5 rounded-2xl text-[11px] font-black text-white/50 hover:border-primary transition-all group">
+                        <m.icon size={16} className="group-hover:text-primary" /> <span>{m.label}</span>
+                     </button>
+                   ))}
                 </div>
              </div>
           </aside>
         )}
 
-        {/* Content Area */}
         <div className={activeTab === 'cms' ? "lg:col-span-3" : "lg:col-span-4"}>
             {viewMode === 'edit' ? (
-               <AnimatePresence mode="wait">
-
-                  {/* ── DASHBOARD OVERVIEW ── */}
-                  {activeTab === 'dashboard' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10">
-                      <div>
-                        <h2 className="text-4xl font-black">歡迎回來，{profile?.full_name || 'Admin'} 👋</h2>
-                        <p className="text-white/30 text-xs font-bold uppercase tracking-widest mt-2">twEFT Command Center — {new Date().toLocaleDateString('zh-TW')}</p>
-                      </div>
-                      {/* KPI Cards */}
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                        {[
-                          { label: '會員總數', value: users.length, sub: `待審核 ${users.filter(u => !u.is_verified).length} 人`, color: 'text-primary', bg: 'bg-primary/10 border-primary/20' },
-                          { label: '課程數', value: courses.length, sub: '已上架課程', color: 'text-accent', bg: 'bg-accent/10 border-accent/20' },
-                          { label: '未處理訂單', value: orders.filter((o: any) => o.status === 'pending').length || orders.length, sub: '需人工審核', color: 'text-yellow-400', bg: 'bg-yellow-500/10 border-yellow-500/20' },
-                          { label: '資源檔案', value: downloads.length, sub: '已上傳資源', color: 'text-green-400', bg: 'bg-green-500/10 border-green-500/20' },
-                        ].map((kpi, i) => (
-                          <div key={i} className={`p-8 rounded-[2rem] border ${kpi.bg} space-y-3`}>
-                            <p className="text-white/40 text-xs font-black uppercase tracking-widest">{kpi.label}</p>
-                            <p className={`text-5xl font-black ${kpi.color}`}>{kpi.value}</p>
-                            <p className="text-white/30 text-xs font-bold">{kpi.sub}</p>
-                          </div>
-                        ))}
-                      </div>
-                      {/* Quick Actions */}
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        {[
-                          { label: '新增消息', tab: 'news_mgr', icon: List },
-                          { label: '管理課程', tab: 'course_mgr', icon: BookOpen },
-                          { label: '審核會員', tab: 'users', icon: Users },
-                          { label: '上傳資源', tab: 'downloads', icon: Download },
-                        ].map((a, i) => (
-                          <button key={i} onClick={() => setActiveTab(a.tab)}
-                            className="p-6 bg-white/5 border border-white/8 rounded-[2rem] hover:border-primary hover:bg-primary/5 transition-all group flex flex-col gap-4">
-                            <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-white/40 group-hover:bg-primary group-hover:text-white transition-all">
-                              <a.icon size={20} />
-                            </div>
-                            <span className="text-sm font-black text-white/60 group-hover:text-white transition-colors text-left">{a.label}</span>
-                          </button>
-                        ))}
-                      </div>
-                      {/* Recent Orders */}
-                      <div className="bg-white/5 border border-white/5 rounded-[2.5rem] p-8 space-y-6">
-                        <h3 className="text-sm font-black text-white/40 uppercase tracking-widest">最新訂單紀錄</h3>
-                        {orders.length === 0 ? (
-                          <p className="text-white/20 text-xs font-bold text-center py-8">目前尚無訂單</p>
-                        ) : (
-                          <div className="space-y-3">
-                            {orders.slice(0, 5).map((ord: any, i: number) => (
-                              <div key={i} className="flex items-center justify-between p-5 bg-white/5 rounded-2xl">
-                                <div>
-                                  <p className="font-bold text-white text-sm">{ord.user_name || '未知用戶'}</p>
-                                  <p className="text-xs text-white/30">{ord.item_name}</p>
-                                </div>
-                                <span className="text-primary font-black text-sm">{ord.amount}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-
-                  {activeTab === 'cms' && (
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8">
-                       <div className="flex items-center justify-between p-6 bg-white/5 border border-white/5 rounded-[2.5rem]">
-                          <div className="flex items-center gap-4">
-                             <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary">
-                                <FileText size={20} />
-                             </div>
-                             <h2 className="text-2xl font-black">正在編輯：{pagesMap.find(p => p.id === currentPage)?.label}</h2>
-                          </div>
-                          <div className="flex items-center gap-4">
-                             <button 
-                               onClick={restoreDefault}
-                               className="px-6 py-2 bg-white/5 hover:bg-red-500/10 hover:text-red-500 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-transparent hover:border-red-500/20"
-                             >
-                               恢復初始模板
-                             </button>
-                             <div className="flex items-center gap-4 text-white/30 text-[10px] font-black uppercase tracking-widest bg-black/20 px-5 py-2 rounded-full">
-                                <Layout size={12} /> {pageModules.length} 個啟用的區塊
-                             </div>
-                          </div>
-                       </div>
-
-                       <div className="space-y-6">
-                          {loading && (
-                             <div className="py-20 flex flex-col items-center justify-center gap-4 bg-white/5 border border-dashed border-white/10 rounded-[4rem] text-white/20 animate-pulse">
-                                <div className="w-10 h-10 border-4 border-white/30 border-t-primary rounded-full animate-spin" />
-                                <span className="text-xs font-black uppercase tracking-widest">正在同步雲端資料庫...</span>
-                             </div>
-                          )}
-                          {!loading && pageModules.length === 0 && (
-                             <div className="py-20 flex flex-col items-center justify-center gap-6 bg-white/5 border border-dashed border-white/10 rounded-[4rem]">
-                                <Layout size={48} className="text-white/10" />
-                                <div className="text-center space-y-2">
-                                   <p className="text-xl font-black text-white/40">此頁面目前尚無內容</p>
-                                   <p className="text-xs text-white/20 font-bold uppercase tracking-widest">點擊下方按鈕或「恢復初始模板」開始編輯</p>
-                                </div>
-                                <button onClick={restoreDefault} className="px-8 py-4 bg-primary/20 text-primary border border-primary/20 rounded-2xl text-xs font-black hover:bg-primary hover:text-white transition-all">套用學會官方模板</button>
-                             </div>
-                          )}
-                          {pageModules.map((module, i) => (
-                            <motion.div key={module.id} layout className="p-10 bg-white/5 border border-white/5 rounded-[3rem] group hover:border-white/10 transition-all relative shadow-xl backdrop-blur-sm overflow-hidden">
-                               <div className="absolute right-10 top-10 flex items-center gap-3">
-                                  <div className="flex items-center bg-black/40 rounded-2xl p-1.5 border border-white/5">
-                                    <button onClick={() => moveModule(i, 'up')} disabled={i === 0} className="p-2.5 hover:bg-white/10 disabled:opacity-20 rounded-xl text-white/40 hover:text-white transition-all"><MoveUp size={18} /></button>
-                                    <button onClick={() => moveModule(i, 'down')} disabled={i === pageModules.length - 1} className="p-2.5 hover:bg-white/10 disabled:opacity-20 rounded-xl text-white/40 hover:text-white transition-all"><MoveDown size={18} /></button>
-                                  </div>
-                                  <button onClick={() => removeModule(module.id)} className="p-4 bg-red-500/10 hover:bg-red-500/80 rounded-2xl text-red-500 hover:text-white transition-all shadow-xl group/del">
-                                     <Trash2 size={18} />
-                                  </button>
-                               </div>
-
-                               <div className="flex items-start gap-10">
-                                  <div className="p-7 bg-white/5 border border-white/10 rounded-[2.5rem] text-primary shadow-2xl ring-1 ring-white/10 group-hover:scale-110 transition-transform">
-                                      {moduleTemplates.find(t => t.type === module.type)?.icon ? (
-                                        React.createElement(moduleTemplates.find(t => t.type === module.type)!.icon, { size: 36 })
-                                      ) : <Layout size={36} />}
-                                  </div>
-                                  <div className="flex-grow max-w-3xl space-y-8">
-                                     <div className="space-y-1">
-                                        <div className="flex items-center gap-2 mb-2">
-                                           <span className="px-3 py-1 bg-primary text-white text-[9px] font-black uppercase tracking-[0.2em] rounded-md">Template: {module.type}</span>
-                                           {module.background && <span className="px-3 py-1 bg-white/10 text-white/60 text-[9px] font-black uppercase tracking-[0.2em] rounded-md">Style: {module.background}</span>}
-                                        </div>
-                                        <input 
-                                          className="text-4xl font-black text-white bg-transparent border-none p-0 focus:ring-0 w-full placeholder:text-white/10" 
-                                          value={module.title || ''} 
-                                          onChange={(e) => updateModule(i, { title: e.target.value })}
-                                          placeholder="輸入主標題..." 
-                                        />
-                                        <input 
-                                          className="text-sm font-bold text-primary/60 bg-transparent border-none p-0 focus:ring-0 w-full uppercase tracking-widest placeholder:text-white/5" 
-                                          value={module.subtitle || ''} 
-                                          onChange={(e) => updateModule(i, { subtitle: e.target.value })}
-                                          placeholder="輸入小標題或核心分類..." 
-                                        />
-                                     </div>
-                                     
-                                     <div className="space-y-4">
-                                        <div className="flex items-center gap-2 group/label">
-                                           <Type size={12} className="text-white/20 group-hover/label:text-primary transition-colors" />
-                                           <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">內容描述與文案區域</label>
-                                        </div>
-                                        <textarea 
-                                          value={module.content || ''} 
-                                          onChange={(e) => updateModule(i, { content: e.target.value })}
-                                          rows={4} 
-                                          className="w-full bg-white/5 border border-white/10 rounded-3xl px-8 py-6 text-base text-white/60 focus:border-primary outline-none focus:text-white transition-all shadow-inner focus:shadow-primary/5" 
-                                        />
-                                     </div>
-
-                                     {module.items && (
-                                       <div className="grid grid-cols-2 gap-4">
-                                          {module.items.slice(0, 4).map((_, idx) => (
-                                             <div key={idx} className="p-4 bg-white/5 border border-white/5 rounded-2xl flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
-                                                   <div className="w-2 h-2 rounded-full bg-primary" />
-                                                   <span className="text-xs font-bold text-white/40">列入項目 #{idx+1}</span>
-                                                </div>
-                                                <Settings size={14} className="text-white/20" />
-                                             </div>
-                                          ))}
-                                          <button className="p-4 border-2 border-dashed border-white/10 rounded-2xl text-white/20 text-xs font-black hover:border-primary hover:text-primary transition-all">+ 新增清單子項</button>
-                                       </div>
-                                     )}
-                                  </div>
-                               </div>
-                            </motion.div>
-                          ))}
-                          <button onClick={() => addModule('HeroSlider')} className="w-full py-20 border-4 border-dashed border-white/5 rounded-[4rem] flex flex-col items-center justify-center gap-4 text-white/20 hover:border-primary/40 hover:text-primary transition-all group">
-                             <div className="w-16 h-16 bg-white/5 rounded-3xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all scale-110 group-hover:rotate-12">
-                                <Plus size={32} />
-                             </div>
-                             <span className="text-xl font-black tracking-tighter">在頁面結尾添加新版塊</span>
-                          </button>
-                       </div>
-                    </motion.div>
-                  )}
-
-                  {activeTab === 'course_mgr' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
-                        <div className="flex items-end justify-between">
-                           <div>
-                              <h2 className="text-5xl font-black text-white">課程管理大綱</h2>
-                              <p className="text-white/40 font-bold mt-2 uppercase tracking-widest text-xs">Total 8 Core Trainings • 3 Seminars</p>
-                           </div>
-                           <button className="px-10 py-5 bg-accent text-dark font-black rounded-[1.5rem] text-sm flex items-center gap-3 shadow-[0_20px_40px_rgba(255,191,0,0.2)] hover:scale-105 transition-all">
-                              <Plus size={20} fill="currentColor" /> 建立新系列課程
-                           </button>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                           {courses.length === 0 && (
-                              <div className="col-span-2 py-40 border-2 border-dashed border-white/5 rounded-[4rem] text-center text-white/20 font-black uppercase tracking-widest text-xs">
-                                 尚無課程資料
-                              </div>
-                           )}
-                           {courses.map(course => (
-                             <div key={course.id} className="p-10 bg-white/5 border border-white/10 rounded-[3rem] group hover:border-accent transition-all relative overflow-hidden backdrop-blur-2xl">
-                                <div className="absolute top-10 right-10 flex items-center gap-3">
-                                   <button onClick={() => setEditItem({ ...course, type: 'course' })} className="p-4 bg-white/5 rounded-[1.2rem] hover:bg-accent hover:text-dark transition-all shadow-xl">
-                                      <Settings size={22} />
-                                   </button>
-                                </div>
-                                <div className="space-y-6">
-                                   <div className="flex items-center gap-3">
-                                      <span className="px-4 py-1.5 bg-accent/20 text-accent text-[10px] font-black uppercase tracking-widest rounded-lg">{course.category}</span>
-                                      <div className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest ${course.status === 'Active' ? 'bg-green-500/20 text-green-500' : 'bg-yellow-500/20 text-yellow-500'}`}>
-                                         {course.status === 'Active' ? '穩定開課中' : '草稿審核'}
-                                      </div>
-                                   </div>
-                                   <div className="space-y-2">
-                                      <h4 className="text-3xl font-black text-white leading-tight">{course.title}</h4>
-                                      <p className="text-xl font-black text-white/60 tracking-tighter">{course.price}</p>
-                                   </div>
-                                   <div className="pt-6 border-t border-white/10 space-y-4">
-                                      <div className="text-[10px] font-black text-white/20 uppercase tracking-widest">Syllabus Highlights</div>
-                                      <div className="flex flex-wrap gap-2">
-                                         {(course.syllabus || []).map((s: string, i: number) => (
-                                           <span key={i} className="px-3 py-1.5 bg-white/5 rounded-lg text-[10px] font-medium text-white/40">{s}</span>
-                                         ))}
-                                      </div>
-                                   </div>
-                                </div>
-                             </div>
-                           ))}
-                        </div>
-                    </motion.div>
-                  )}
-
-                  {activeTab === 'news_mgr' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
-                       <div className="flex items-end justify-between">
-                           <div>
-                              <h2 className="text-5xl font-black text-white">消息發佈管理</h2>
-                              <p className="text-white/40 font-bold mt-2 uppercase tracking-widest text-xs">Official Announcements • Research Articles</p>
-                           </div>
-                           <button className="px-10 py-5 bg-primary text-white font-black rounded-[1.5rem] text-sm flex items-center gap-3 shadow-[0_20px_40px_rgba(230,126,34,0.3)] hover:scale-105 transition-all">
-                              <Plus size={20} /> 撰寫深度報導
-                           </button>
-                        </div>
-                        <div className="space-y-4">
-                           {news.length === 0 && (
-                              <div className="py-20 border-2 border-dashed border-white/5 rounded-[3rem] text-center text-white/20 font-black uppercase tracking-widest text-xs">
-                                 尚無公告消息
-                              </div>
-                           )}
-                           {news.map((item: any) => (
-                             <div key={item.id} className="p-8 bg-white/5 border border-white/5 rounded-[2.5rem] flex items-center justify-between group hover:border-primary transition-all backdrop-blur-3xl">
-                                <div className="flex items-center gap-10">
-                                   <div className="flex flex-col items-center justify-center w-20 h-20 bg-primary/10 rounded-3xl border border-primary/20 text-primary">
-                                      <span className="text-2xl font-black">{getDay(item.date)}</span>
-                                      <span className="text-[9px] font-black uppercase tracking-widest">{getMonth(item.date)}</span>
-                                   </div>
-                                   <div className="space-y-1">
-                                      <h4 className="text-xl font-black text-white group-hover:text-primary transition-colors">{item.title}</h4>
-                                      <div className="flex items-center gap-4 text-xs text-white/30 font-bold">
-                                         <span className="flex items-center gap-2 underline">由 {item.author || 'Admin'} 撰寫</span>
-                                         <span>於 {item.date}</span>
-                                      </div>
-                                   </div>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                   <button onClick={() => setEditItem({ ...item, type: 'news' })} className="px-6 py-3 bg-white/5 rounded-xl text-xs font-black text-white/40 hover:bg-white/10 hover:text-white transition-all underline decoration-primary decoration-2 underline-offset-4">編輯內容</button>
-                                   <button className="p-4 bg-red-500/10 hover:bg-red-500 rounded-2xl text-red-500 hover:text-white transition-all shadow-xl"><Trash2 size={18} /></button>
-                                </div>
-                             </div>
-                           ))}
-                        </div>
-                    </motion.div>
-                  )}
-
-                  {activeTab === 'orders' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
-                       <div className="flex items-end justify-between">
-                          <div>
-                             <h2 className="text-5xl font-black text-white">訂單與金流對帳</h2>
-                             <p className="text-white/40 font-bold mt-2 uppercase tracking-widest text-xs">Manage Course Enrollments & Fees</p>
-                          </div>
-                       </div>
-                       <div className="bg-white/5 border border-white/5 rounded-[3rem] overflow-hidden">
-                          <table className="w-full text-left">
-                             <thead className="bg-white/5 text-[10px] font-black uppercase tracking-widest text-white/40">
-                                <tr>
-                                   <th className="px-10 py-8">訂單編號/日期</th>
-                                   <th className="px-10 py-8">會員名稱</th>
-                                   <th className="px-10 py-8">對應項目</th>
-                                   <th className="px-10 py-8 text-right">金額狀態</th>
-                                </tr>
-                             </thead>
-                             <tbody className="divide-y divide-white/5">
-                                {orders.length === 0 && (
-                                   <tr><td colSpan={4} className="px-10 py-20 text-center text-white/20 font-black uppercase tracking-widest text-xs">尚無任何課程訂單記錄</td></tr>
-                                )}
-                                {orders.map((ord: any) => (
-                                  <tr key={ord.id} className="hover:bg-white/5 transition-colors">
-                                     <td className="px-10 py-8 font-bold text-primary">{ord.id}</td>
-                                     <td className="px-10 py-8 font-black">{ord.user_name}</td>
-                                     <td className="px-10 py-8 text-white/40">{ord.item_name}</td>
-                                     <td className="px-10 py-8 text-right font-black text-white/60">{ord.amount}</td>
-                                  </tr>
-                                ))}
-                             </tbody>
-                          </table>
-                       </div>
-                    </motion.div>
-                  )}
-
-                  {activeTab === 'downloads' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
-                       <div className="flex items-end justify-between">
-                          <h2 className="text-5xl font-black text-white">資源管理中心</h2>
-                          <input 
-                            type="file" 
-                            ref={fileInputRef} 
-                            onChange={handleFileUpload} 
-                            className="hidden" 
-                          />
-                          <button 
-                            onClick={() => fileInputRef.current?.click()}
-                            className="px-10 py-5 bg-primary text-white font-black rounded-2xl flex items-center gap-3 shadow-[0_20px_40px_rgba(230,126,34,0.3)] hover:scale-105 transition-all"
-                          >
-                             <Plus size={20} /> 上傳資源
-                          </button>
-                       </div>
-                       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                          {downloads.length === 0 && (
-                             <div className="col-span-3 py-20 border-2 border-dashed border-white/5 rounded-[3rem] text-center text-white/20 font-black uppercase tracking-widest text-xs">
-                                尚無下載資源
-                             </div>
-                          )}
-                          {downloads.map((file: any, i: number) => (
-                            <div key={i} className="p-10 bg-white/5 border border-white/10 rounded-[3rem] space-y-6 group hover:border-primary transition-all">
-                               <div className="flex items-center justify-between">
-                                  <div className="p-4 bg-primary/10 rounded-2xl text-primary shadow-inner"><FileText size={28} /></div>
-                                  <span className="px-3 py-1 bg-white/10 rounded-lg text-[9px] font-black uppercase tracking-widest text-white/40 border border-white/5">{file.access_level || 'Professional'}</span>
-                               </div>
-                               <h4 className="text-xl font-black truncate text-white">{file.name}</h4>
-                               <div className="flex items-center gap-4">
-                                  <button className="flex-grow py-4 bg-white/5 hover:bg-primary hover:text-white rounded-2xl text-xs font-black transition-all">詳情</button>
-                                  <button className="p-4 bg-red-500/10 hover:bg-red-500 rounded-2xl text-red-500 hover:text-white transition-all shadow-xl"><Trash2 size={18} /></button>
-                               </div>
-                            </div>
-                          ))}
-                       </div>
-                    </motion.div>
-                  )}
-
-                  {activeTab === 'users' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
-                       <div className="flex items-end justify-between">
-                          <div>
-                             <h2 className="text-5xl font-black text-white">權限與核准中心</h2>
-                             <p className="text-white/40 font-bold mt-2 uppercase tracking-widest text-xs">Manage Member Roles & Platform Permissions</p>
-                          </div>
-                          <div className="flex items-center gap-4 bg-white/5 p-2 rounded-2xl border border-white/5">
-                             <div className="relative">
-                                <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" />
-                                <input 
-                                  className="bg-black/20 border-none pl-12 pr-6 py-3 rounded-xl text-sm focus:ring-1 focus:ring-primary w-64 placeholder:text-white/10" 
-                                  placeholder="搜尋姓名或電子郵件..." 
-                                  value={searchQuery}
-                                  onChange={(e) => setSearchQuery(e.target.value)}
-                                />
-                             </div>
-                             <button className="p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"><Filter size={18} className="text-white/40" /></button>
-                          </div>
-                       </div>
-
-                       <div className="overflow-hidden bg-white/5 border border-white/5 rounded-[3rem] shadow-2xl backdrop-blur-3xl">
-                          <table className="w-full text-left border-collapse">
-                             <thead>
-                                <tr className="border-b border-white/5 bg-white/5 text-[11px] font-black text-white/40 uppercase tracking-[0.4em]">
-                                   <th className="px-10 py-8">會員身份識別</th>
-                                   <th className="px-10 py-8">目前的權限</th>
-                                   <th className="px-10 py-8">驗證狀態</th>
-                                   <th className="px-10 py-8 text-right">管理操作</th>
-                                </tr>
-                             </thead>
-                             <tbody className="divide-y divide-white/5">
-                                {users.length === 0 && (
-                                   <tr><td colSpan={4} className="px-10 py-20 text-center text-white/20 font-black uppercase tracking-widest text-xs">載入會員名冊中或尚無資料...</td></tr>
-                                )}
-                                {filteredUsers.map((user: any) => (
-                                  <tr key={user.id} className="group hover:bg-white/[0.02] transition-colors">
-                                     <td className="px-10 py-10">
-                                        <div className="flex items-center gap-5">
-                                           <div className="w-14 h-14 bg-slate-800 rounded-2xl border-2 border-white/5 flex items-center justify-center font-black text-xl text-white/20">{(user.full_name || user.email || 'A')[0].toUpperCase()}</div>
-                                           <div className="space-y-1">
-                                              <p className="text-lg font-black text-white">{user.full_name || '未設定姓名'}</p>
-                                              <p className="text-xs text-white/30 font-medium">{user.email}</p>
-                                           </div>
-                                        </div>
-                                     </td>
-                                     <td className="px-10 py-10">
-                                        <div className="flex flex-wrap gap-2">
-                                           <span className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest ${user.role === 'Professional' ? 'bg-primary/20 text-primary border border-primary/20' : 'bg-white/10 text-white/40 border border-white/10'}`}>
-                                              {user.role}
-                                           </span>
-                                           {(user.permissions || []).map((p: string) => (
-                                             <span key={p} className="px-3 py-1 bg-white/5 border border-white/5 rounded-lg text-[9px] font-bold text-white/40">{p}</span>
-                                           ))}
-                                        </div>
-                                     </td>
-                                     <td className="px-10 py-10">
-                                        {user.is_verified ? (
-                                           <div className="flex items-center gap-3 text-green-500 bg-green-500/10 w-fit px-4 py-1.5 rounded-full border border-green-500/20">
-                                              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                                              <span className="text-[10px] font-black uppercase tracking-widest">已完全驗證</span>
-                                           </div>
-                                        ) : (
-                                          <div className="flex items-center gap-3 text-yellow-500 bg-yellow-500/10 w-fit px-4 py-1.5 rounded-full border border-yellow-500/20">
-                                             <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse" />
-                                             <span className="text-[10px] font-black uppercase tracking-widest">等待人工審核</span>
-                                          </div>
-                                        )}
-                                     </td>
-                                     <td className="px-10 py-10 text-right">
-                                        <div className="flex items-center justify-end gap-3">
-                                           <button onClick={() => setEditItem({ ...user, type: 'user' })} className="p-4 bg-white/5 rounded-2xl text-white/40 hover:bg-white/10 hover:text-white transition-all shadow-inner border border-white/10"><Settings size={18} /></button>
-                                           {!user.is_verified && (
-                                              <button className="px-8 py-4 bg-green-500 text-white text-xs font-black rounded-2xl shadow-2xl shadow-green-500/20 hover:scale-105 active:scale-95 transition-all">正式核准進階身份</button>
-                                           )}
-                                        </div>
-                                     </td>
-                                  </tr>
-                                ))}
-                             </tbody>
-                          </table>
-                       </div>
-                    </motion.div>
-                  )}
-               </AnimatePresence>
-            ) : (
-               <div className="space-y-12">
-                  <div className="flex items-center justify-between">
-                     <h2 className="text-3xl font-black">即時預覽：{pagesMap.find(p => p.id === currentPage)?.label}</h2>
-                     <div className="flex items-center bg-white/5 p-1 rounded-2xl border border-white/10">
-                        <button className="px-6 py-2 rounded-xl bg-white text-dark text-[10px] font-black">Desktop</button>
-                        <button className="px-6 py-2 rounded-xl text-white/30 text-[10px] font-black">Mobile</button>
-                     </div>
-                  </div>
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white rounded-[4rem] overflow-hidden min-h-[900px] shadow-[0_50px_100px_rgba(0,0,0,0.5)] relative border-[12px] border-dark">
-                    <div className="absolute top-10 right-10 z-50 px-8 py-4 bg-accent text-dark font-black rounded-full text-xs shadow-2xl flex items-center gap-4 ring-4 ring-accent/20">
-                       <div className="w-3 h-3 bg-dark rounded-full animate-ping" />
-                       REAL-TIME LIVE STREAMING
+              <AnimatePresence mode="wait">
+                {activeTab === 'dashboard' && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10">
+                    <h2 className="text-4xl font-black">Admin 數據主控台</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                       {[
+                         { label: '學員總數', value: users.length, color: 'text-primary' },
+                         { label: '當月課程', value: courses.length, color: 'text-accent' },
+                         { label: '待審訂單', value: orders.filter(o=>o.status!=='approved').length, color: 'text-yellow-400' },
+                         { label: '最新消息', value: news.length, color: 'text-green-400' }
+                       ].map((k, i) => (
+                         <div key={i} className="p-8 bg-white/5 border border-white/5 rounded-[2.5rem] space-y-2">
+                            <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">{k.label}</p>
+                            <p className={`text-5xl font-black ${k.color}`}>{k.value}</p>
+                         </div>
+                       ))}
                     </div>
-                    
-                    <div className="h-full overflow-y-auto custom-scrollbar bg-slate-50">
-                       <ModuleRenderer modules={pageModules} />
+                    <div className="flex gap-4">
+                       <button onClick={()=>setActiveTab('course_mgr')} className="px-8 py-4 bg-white/5 rounded-2xl text-xs font-black hover:bg-primary transition-all">管理全球課程</button>
+                       <button onClick={()=>setActiveTab('news_mgr')} className="px-8 py-4 bg-white/5 rounded-2xl text-xs font-black hover:bg-primary transition-all">發佈今日公告</button>
+                       <button onClick={()=>setActiveTab('users')} className="px-8 py-4 bg-white/5 rounded-2xl text-xs font-black hover:bg-primary transition-all">審核專業資格</button>
                     </div>
                   </motion.div>
-               </div>
+                )}
+
+                {activeTab === 'cms' && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                    {pageModules.map((m, i) => (
+                      <div key={m.id} className="p-10 bg-white/5 border border-white/5 rounded-[3rem] relative group hover:border-primary/30 transition-all">
+                         <div className="absolute top-10 right-10 flex gap-2">
+                            <button onClick={()=>moveModule(i, 'up')} className="p-2 bg-white/5 rounded-lg text-white/20 hover:text-white"><MoveUp size={16}/></button>
+                            <button onClick={()=>moveModule(i, 'down')} className="p-2 bg-white/5 rounded-lg text-white/20 hover:text-white"><MoveDown size={16}/></button>
+                            <button onClick={()=>removeModule(m.id)} className="p-2 bg-red-500/10 rounded-lg text-red-500 hover:bg-red-500 hover:text-white"><Trash2 size={16}/></button>
+                         </div>
+                         <div className="flex gap-8 items-start">
+                            <div className="w-16 h-16 bg-white/5 rounded-3xl flex items-center justify-center text-primary border border-white/10 shadow-2xl">
+                               <Layout size={32}/>
+                            </div>
+                            <div className="flex-grow space-y-4">
+                               <div>
+                                  <h4 className="text-3xl font-black text-white">{m.title || '無標題'}</h4>
+                                  <p className="text-sm font-bold text-primary/40 uppercase tracking-widest">{m.type} • {m.background || 'default'}</p>
+                               </div>
+                               <button onClick={()=>setEditItem({ ...m, index: i, type: 'cms_module' })} className="px-6 py-2 bg-white/5 hover:bg-primary hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">編輯數據詳情</button>
+                            </div>
+                         </div>
+                      </div>
+                    ))}
+                    <button onClick={()=>addModule('HeroSlider')} className="w-full py-20 border-4 border-dashed border-white/5 rounded-[4rem] text-white/20 font-black text-xl hover:border-primary hover:text-primary transition-all">+ 添加新版塊</button>
+                  </motion.div>
+                )}
+
+                {activeTab === 'course_mgr' && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10">
+                     <div className="flex justify-between items-end">
+                        <h2 className="text-4xl font-black">全球教育課程庫</h2>
+                        <button onClick={()=>setEditItem({ type: 'course' })} className="px-10 py-5 bg-accent text-dark rounded-2xl font-black shadow-2xl shadow-accent/20">建立新課程</button>
+                     </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {courses.map(c => (
+                          <div key={c.id} className="p-10 bg-white/5 border border-white/10 rounded-[3rem] relative group hover:border-accent transition-all">
+                             <button onClick={()=>setEditItem({ ...c, type: 'course' })} className="absolute top-10 right-10 p-4 bg-white/5 rounded-2xl hover:bg-accent hover:text-dark transition-all"><Settings size={20}/></button>
+                             <div className="space-y-4">
+                                <span className="px-4 py-1 bg-accent/20 text-accent rounded-lg text-[10px] font-black uppercase tracking-widest">{c.category}</span>
+                                <h3 className="text-3xl font-black">{c.title}</h3>
+                                <p className="text-xl text-white/40 font-bold">{c.price}</p>
+                             </div>
+                          </div>
+                        ))}
+                     </div>
+                  </motion.div>
+                )}
+
+                {activeTab === 'news_mgr' && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                     <div className="flex justify-between items-end mb-4">
+                        <h2 className="text-4xl font-black">學會公告管理</h2>
+                        <button onClick={()=>setEditItem({ type: 'news' })} className="px-10 py-5 bg-primary text-white rounded-2xl font-black">發佈新消息</button>
+                     </div>
+                     {news.map(n => (
+                       <div key={n.id} className="p-8 bg-white/5 border border-white/5 rounded-[2.5rem] flex items-center justify-between group hover:border-primary transition-all">
+                          <div>
+                             <h4 className="text-xl font-black">{n.title}</h4>
+                             <p className="text-xs text-white/20 font-bold uppercase tracking-widest">{n.date} • {n.category || '活動消息'}</p>
+                          </div>
+                          <button onClick={()=>setEditItem({ ...n, type: 'news' })} className="px-6 py-3 bg-white/5 hover:bg-primary hover:text-white rounded-xl text-xs font-black transition-all">詳情與編輯</button>
+                       </div>
+                     ))}
+                  </motion.div>
+                )}
+
+                {activeTab === 'orders' && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white/5 border border-white/5 rounded-[3rem] overflow-hidden">
+                     <table className="w-full text-left">
+                        <thead className="bg-white/5 text-[10px] font-black uppercase tracking-[0.3em] text-white/30">
+                           <tr><th className="px-10 py-8">訂單 ID</th><th className="px-10 py-8">訂購人</th><th className="px-10 py-8">金額</th><th className="px-10 py-8 text-right">核操作</th></tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                           {orders.map(o => (
+                             <tr key={o.id} className="hover:bg-white/5 group">
+                                <td className="px-10 py-8 font-bold text-primary">{o.id}</td>
+                                <td className="px-10 py-8 font-black">{o.user_name}</td>
+                                <td className="px-10 py-8 text-white/60">{o.amount}</td>
+                                <td className="px-10 py-8 text-right">
+                                   {o.status === 'approved' 
+                                     ? <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">已核核</span>
+                                     : <button onClick={()=>handleApproveOrder(o.id)} className="px-6 py-2 bg-primary/10 text-primary rounded-xl text-[10px] font-black border border-primary/20 hover:bg-primary hover:text-white transition-all">核准入帳</button>}
+                                </td>
+                             </tr>
+                           ))}
+                        </tbody>
+                     </table>
+                  </motion.div>
+                )}
+
+                {activeTab === 'users' && (
+                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white/5 border border-white/5 rounded-[3rem] overflow-hidden">
+                      <table className="w-full text-left">
+                        <thead className="bg-white/5 text-[10px] font-black uppercase tracking-[0.3em] text-white/30">
+                           <tr><th className="px-10 py-8">用戶名稱</th><th className="px-10 py-8">級別角色</th><th className="px-10 py-8">狀態</th><th className="px-10 py-8 text-right">操作</th></tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5">
+                           {users.map(u => (
+                             <tr key={u.id} className="hover:bg-white/5 group">
+                                <td className="px-10 py-8 font-black">{u.full_name || u.email}</td>
+                                <td className="px-10 py-8 text-[10px] font-black uppercase text-primary tracking-widest">{u.role}</td>
+                                <td className="px-10 py-8">
+                                   {u.is_verified 
+                                     ? <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"/> 
+                                     : <div className="w-2 h-2 rounded-full bg-yellow-500"/>}
+                                </td>
+                                <td className="px-10 py-8 text-right">
+                                   <button onClick={()=>setEditItem({ ...u, type: 'user' })} className="p-3 bg-white/5 rounded-xl hover:bg-white/10 text-white/30 hover:text-white"><Settings size={16}/></button>
+                                </td>
+                             </tr>
+                           ))}
+                        </tbody>
+                      </table>
+                   </motion.div>
+                )}
+
+                {activeTab === 'settings' && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10">
+                    <h2 className="text-4xl font-black">核心系統設定</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                       <div className="p-10 bg-white/5 border border-white/5 rounded-[3rem] space-y-6">
+                          <h3 className="text-sm font-black text-white/30 uppercase tracking-[0.3em]">網站元數據</h3>
+                          <div className="space-y-4">
+                             {['網站標題', 'SEO描述', '聯絡信箱'].map(f=>(
+                               <div key={f} className="space-y-2">
+                                  <label className="text-[10px] font-black text-white/20 uppercase tracking-widest">{f}</label>
+                                  <input className="w-full bg-black/20 border border-white/10 p-4 rounded-2xl outline-none focus:border-primary" />
+                               </div>
+                             ))}
+                          </div>
+                       </div>
+                       <div className="p-10 bg-white/5 border border-white/5 rounded-[3rem] space-y-6">
+                          <h3 className="text-sm font-black text-white/30 uppercase tracking-[0.3em]">系統連線狀態</h3>
+                          {[ {n:'Supabase DB', s:'Online'}, {n:'Storage', s:'Ready'}, {n:'Auth', s:'Secure'} ].map(s=>(
+                            <div key={s.n} className="flex justify-between items-center p-5 bg-black/20 rounded-2xl">
+                               <span className="font-bold">{s.n}</span>
+                               <span className="text-[10px] font-black text-green-500 uppercase tracking-widest">{s.s}</span>
+                            </div>
+                          ))}
+                       </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            ) : (
+                <div className="space-y-12">
+                   <h2 className="text-3xl font-black">即時預覽：{pagesMap.find(p => p.id === currentPage)?.label}</h2>
+                   <div className="bg-white rounded-[4rem] overflow-hidden min-h-[900px] shadow-[0_50px_100px_rgba(0,0,0,0.5)] border-[12px] border-dark relative">
+                      <div className="absolute top-10 right-10 z-50 px-8 py-4 bg-accent text-dark font-black rounded-full text-xs shadow-2xl flex items-center gap-4">
+                         <div className="w-3 h-3 bg-dark rounded-full animate-ping" />
+                         LIVE PREVIEW MODE
+                      </div>
+                      <div className="h-full overflow-y-auto custom-scrollbar">
+                         <ModuleRenderer modules={pageModules} />
+                      </div>
+                   </div>
+                </div>
             )}
         </div>
       </div>
 
+      {/* Enhanced Multi-purpose Edit Modal */}
       <AnimatePresence>
         {editItem && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-12 backdrop-blur-3xl bg-black/60">
-             <motion.div 
-               initial={{ opacity: 0, scale: 0.95, y: 30 }}
-               animate={{ opacity: 1, scale: 1, y: 0 }}
-               exit={{ opacity: 0, scale: 0.95, y: 30 }}
-               className="bg-[#141416] border border-white/10 w-full max-w-5xl rounded-[4rem] shadow-[0_50px_150px_rgba(0,0,0,0.8)] overflow-hidden flex"
-             >
-                <div className="w-1/3 bg-black/40 border-r border-white/5 p-12 space-y-12">
-                   <div className="space-y-4">
-                      <div className="w-20 h-20 bg-primary/20 rounded-[2.5rem] flex items-center justify-center text-primary shadow-2xl">
-                         {editItem.type === 'course' ? <BookOpen size={40} /> : editItem.type === 'news' ? <List size={40} /> : <Users size={40} />}
-                      </div>
-                      <h2 className="text-4xl font-black tracking-tighter capitalize">{editItem.type} 詳情編輯</h2>
-                      <p className="text-white/30 text-xs font-bold leading-relaxed">請確認所有資訊都符合學會的專業規範，變更後將立即同步至資料庫。</p>
-                   </div>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[600] flex items-center justify-center p-6 md:p-12 lg:p-20 bg-dark/95 backdrop-blur-3xl">
+             <motion.div initial={{ scale: 0.9, y: 30 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 30 }} className="w-full max-w-6xl h-full bg-[#1A252B] rounded-[4rem] border border-white/10 overflow-hidden flex flex-col relative shadow-[0_50px_150px_rgba(0,0,0,0.8)]">
+                <button onClick={() => setEditItem(null)} className="absolute top-8 right-8 z-50 p-4 bg-white/5 hover:bg-red-500 hover:text-white rounded-2xl transition-all"><X size={24}/></button>
+                
+                <div className="flex-grow overflow-hidden">
+                   {editItem.type === 'course' && <CourseForm initialData={editItem.id ? editItem : null} onSave={handleSaveCourse} onCancel={()=>setEditItem(null)} loading={loading} />}
+                   {editItem.type === 'news' && <NewsForm initialData={editItem.id ? editItem : null} onSave={handleSaveNews} onCancel={()=>setEditItem(null)} loading={loading} />}
                    
-                   <div className="space-y-4">
-                      <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">系統管理動作</div>
-                      <button className="w-full py-4 bg-white/5 border border-white/10 rounded-2xl text-[11px] font-black text-white hover:bg-white/10 transition-all flex items-center justify-center gap-3"><Save size={16} /> 保存所有變更</button>
-                      <button onClick={() => setEditItem(null)} className="w-full py-4 bg-red-500/10 text-red-500 rounded-2xl text-[11px] font-black hover:bg-red-500 hover:text-white transition-all">關閉不儲存</button>
-                   </div>
-                </div>
+                   {editItem.type === 'cms_module' && (
+                     <div className="h-full flex flex-col">
+                        <div className="p-10 border-b border-white/5 flex items-center justify-between sticky top-0 bg-[#1A252B] z-10">
+                           <div className="flex items-center gap-6">
+                              <div className="w-16 h-16 bg-primary/20 rounded-3xl flex items-center justify-center text-primary shadow-2xl"><Layout size={32}/></div>
+                              <div><h2 className="text-3xl font-black text-white">模組數據編輯器</h2><p className="text-white/20 text-[10px] font-black uppercase tracking-widest mt-1">Schema Identifier: {editItem.id}</p></div>
+                           </div>
+                           <button onClick={()=>{updateModule(editItem.index, editItem); setEditItem(null); showToast('暫存已更新，請點擊同步發佈');}} className="px-10 py-4 bg-primary text-white rounded-2xl font-black shadow-2xl hover:scale-105 active:scale-95 transition-all">確認儲存暫存</button>
+                        </div>
+                        <div className="flex-grow overflow-y-auto p-12 custom-scrollbar pb-32">
+                           <ModuleEditor module={editItem} onChange={(d)=>setEditItem({...editItem, ...d})} />
+                        </div>
+                     </div>
+                   )}
 
-                <div className="flex-grow p-16 overflow-y-auto max-h-[85vh] custom-scrollbar bg-gradient-to-br from-transparent to-primary/5">
-                   <div className="space-y-10">
-                      {editItem.type === 'course' && (
-                        <>
-                           <div className="space-y-4">
-                              <label className="text-xs font-black text-primary uppercase tracking-widest">課程主標題</label>
-                              <input className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 text-xl font-bold focus:border-primary outline-none" defaultValue={editItem.title} />
-                           </div>
-                           <div className="grid grid-cols-2 gap-8">
-                              <div className="space-y-4">
-                                <label className="text-xs font-black text-white/40 uppercase tracking-widest">課程類別</label>
-                                <input className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm" defaultValue={editItem.category} />
-                              </div>
-                              <div className="space-y-4">
-                                <label className="text-xs font-black text-white/40 uppercase tracking-widest">開課價格</label>
-                                <input className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm" defaultValue={editItem.price} />
-                              </div>
-                           </div>
-                           <div className="space-y-4">
-                              <label className="text-xs font-black text-white/40 uppercase tracking-widest">Syllabus 課程大綱單元</label>
-                              <div className="space-y-2">
-                                 {(editItem.syllabus || []).map((s: string, idx: number) => (
-                                    <div key={idx} className="p-5 bg-white/5 border border-white/5 rounded-2xl flex items-center justify-between group">
-                                       <span className="text-sm font-bold text-white/60">Stage {idx+1}: {s}</span>
-                                       <div className="flex gap-2">
-                                          <button className="p-2 bg-white/5 rounded-lg text-white/20 hover:text-white"><MoveUp size={14} /></button>
-                                          <button className="p-2 bg-white/5 rounded-lg text-white/20 hover:text-red-500"><Trash2 size={14} /></button>
-                                       </div>
-                                    </div>
-                                 ))}
-                                 <button className="w-full py-4 border-2 border-dashed border-white/10 rounded-3xl text-sm font-black text-white/20 hover:border-primary hover:text-primary transition-all">+ 添加新教學單元</button>
-                              </div>
-                           </div>
-                        </>
-                      )}
-
-                      {editItem.type === 'news' && (
-                         <>
-                            <div className="space-y-4">
-                              <label className="text-xs font-black text-primary uppercase tracking-widest">報導主標題</label>
-                              <input className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-5 text-xl font-bold focus:border-primary outline-none" defaultValue={editItem.title} />
-                            </div>
-                            <div className="space-y-4">
-                              <label className="text-xs font-black text-white/40 uppercase tracking-widest">文章內容 (Markdown Support)</label>
-                              <textarea rows={10} className="w-full bg-white/5 border border-white/10 rounded-[2rem] px-8 py-6 text-base text-white/60 focus:border-primary outline-none whitespace-pre-line" defaultValue={editItem.content} />
-                            </div>
-                         </>
-                      )}
-
-                      {editItem.type === 'user' && (
-                        <div className="space-y-12">
-                           <div className="space-y-6">
-                              <h3 className="text-2xl font-black text-white border-l-4 border-primary pl-6">調整會員角色與權限架構</h3>
-                              <div className="grid grid-cols-2 gap-4">
-                                 {['SuperAdmin', 'Editor', 'Professional', 'Member', 'Guest'].map(role => (
-                                   <div key={role} className={`p-6 rounded-[2rem] border-2 cursor-pointer transition-all ${editItem.role === role ? 'bg-primary/20 border-primary text-primary' : 'bg-white/5 border-transparent text-white/40'}`}>
-                                      <p className="text-sm font-black mb-1">{role}</p>
-                                      <p className="text-[9px] font-bold uppercase tracking-widest opacity-60">
-                                         {role === 'SuperAdmin' ? '擁有全平台完整操作權限' : role === 'Editor' ? '僅能編輯網頁內容與消息' : '一般使用者權限'}
-                                      </p>
-                                   </div>
-                                 ))}
-                              </div>
-                           </div>
-                           
-                           <div className="space-y-6">
-                              <h3 className="text-2xl font-black text-white border-l-4 border-accent pl-6">平台操作權限細節 (Permissions Matrix)</h3>
-                              <div className="space-y-3">
-                                 {[
-                                   { id: 'view_cms', label: '檢視內容管理區', desc: '唯讀權限' },
-                                   { id: 'edit_cms', label: '編輯全站頁面架構', desc: '可新增、刪除、排序區塊' },
-                                   { id: 'manage_courses', label: '管理課程大綱與報名', desc: '可調整價格與單元' },
-                                   { id: 'verify_users', label: '人工審核會員身份', desc: '最高層級管理動作' }
-                                 ].map(p => (
-                                   <div key={p.id} className="flex items-center justify-between p-6 bg-white/5 rounded-3xl group">
-                                      <div className="space-y-1">
-                                         <p className="text-sm font-black text-white group-hover:text-accent transition-colors">{p.label}</p>
-                                         <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest">{p.desc}</p>
-                                      </div>
-                                      <div className={`w-12 h-6 rounded-full p-1 transition-colors ${(editItem.permissions || []).includes(p.id) ? 'bg-green-500' : 'bg-white/10'}`}>
-                                         <div className={`w-4 h-4 bg-white rounded-full transition-transform ${(editItem.permissions || []).includes(p.id) ? 'translate-x-6' : 'translate-x-0'}`} />
-                                      </div>
-                                   </div>
-                                 ))}
-                              </div>
+                   {editItem.type === 'user' && (
+                     <div className="p-20 flex flex-col justify-center h-full max-w-4xl mx-auto space-y-12">
+                        <div className="flex items-center gap-8">
+                           <div className="w-24 h-24 bg-primary rounded-[2rem] flex items-center justify-center font-black text-3xl">{(editItem.full_name || editItem.email)[0].toUpperCase()}</div>
+                           <div className="space-y-1">
+                              <h2 className="text-5xl font-black text-white">{editItem.full_name || '未設姓名'}</h2>
+                              <p className="text-primary font-bold text-xl">{editItem.email}</p>
                            </div>
                         </div>
-                      )}
-                   </div>
+                        <div className="grid grid-cols-2 gap-8 bg-white/5 p-10 rounded-[3rem] border border-white/10">
+                           <div className="space-y-1"><p className="text-[10px] font-black text-white/20 uppercase tracking-widest">目前系統角色</p><p className="text-white/80 font-bold text-lg">{editItem.role || 'Member'}</p></div>
+                           <div className="space-y-1"><p className="text-[10px] font-black text-white/20 uppercase tracking-widest">身分驗證狀態</p><p className="text-white/80 font-bold text-lg">{editItem.is_verified ? '已核准專業人員' : '一般用戶 / 待審核'}</p></div>
+                        </div>
+                        <div className="flex gap-4">
+                           {!editItem.is_verified && <button onClick={()=>{handleVerifyUser(editItem.id); setEditItem(null);}} className="px-12 py-5 bg-green-500 text-white font-black rounded-3xl shadow-2xl hover:bg-green-600 transition-all flex items-center gap-3"><CheckCircle2 size={24}/> 核准專業身份</button>}
+                           <button className="px-12 py-5 bg-white/5 text-white/40 font-black rounded-3xl hover:bg-white/10 transition-all">手動調整賦權</button>
+                           <button className="px-12 py-5 bg-red-500/10 text-red-500 font-black rounded-3xl hover:bg-red-500 transition-all ml-auto">封鎖帳號</button>
+                        </div>
+                     </div>
+                   )}
                 </div>
              </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
