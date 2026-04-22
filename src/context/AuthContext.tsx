@@ -9,6 +9,7 @@ interface AuthContextType {
   profile: UserProfile | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updateRole: (role: UserRole) => Promise<void>;
 }
@@ -88,6 +89,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const signInWithEmail = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    return { error };
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
@@ -105,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signInWithGoogle, signOut, updateRole }}>
+    <AuthContext.Provider value={{ user, profile, loading, signInWithGoogle, signInWithEmail, signOut, updateRole }}>
       {children}
     </AuthContext.Provider>
   );

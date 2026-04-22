@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   User, 
   Lock, 
@@ -17,11 +17,16 @@ import {
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 export default function PortalPage() {
-  const { signInWithGoogle, user, loading } = useAuth();
+  const { signInWithGoogle, signInWithEmail, user, loading } = useAuth();
   const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [log, setLog] = useState<{ msg: string; type: 'info' | 'error' } | null>(null);
 
   useEffect(() => {
     if (user && !loading) {
@@ -119,9 +124,20 @@ export default function PortalPage() {
                    </div>
 
                    <form 
-                    onSubmit={(e) => {
+                    onSubmit={async (e) => {
                       e.preventDefault();
-                      router.push('/portal/dashboard');
+                      setIsLoggingIn(true);
+                      setLog({ msg: '正在驗證身分...', type: 'info' });
+                      
+                      const formattedEmail = email.includes('@') ? email : `${email}@tweft.org`;
+                      const { error } = await signInWithEmail(formattedEmail, password);
+                      
+                      if (error) {
+                        setLog({ msg: `登入失敗: ${error.message}`, type: 'error' });
+                        setIsLoggingIn(false);
+                      } else {
+                        setLog({ msg: '驗證成功，正在跳轉...', type: 'info' });
+                      }
                     }}
                     className="space-y-6"
                    >
@@ -131,6 +147,8 @@ export default function PortalPage() {
                             <User className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20" size={20} />
                             <input 
                               type="text" 
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
                               placeholder="Your account"
                               className="w-full bg-white/5 border border-white/10 rounded-3xl px-14 py-5 text-white focus:bg-white/10 focus:border-primary transition-all outline-none placeholder:text-white/10"
                             />
@@ -142,6 +160,8 @@ export default function PortalPage() {
                             <Key className="absolute left-6 top-1/2 -translate-y-1/2 text-white/20" size={20} />
                             <input 
                               type="password" 
+                              value={password}
+                              onChange={(e) => setPassword(e.target.value)}
                               placeholder="••••••••"
                               className="w-full bg-white/5 border border-white/10 rounded-3xl px-14 py-5 text-white focus:bg-white/10 focus:border-primary transition-all outline-none placeholder:text-white/10"
                             />
@@ -152,14 +172,40 @@ export default function PortalPage() {
                             <div className="w-5 h-5 rounded-md border-2 border-white/20 bg-white/5 group-hover:border-primary transition-all" />
                             <span className="text-xs font-bold text-white/40 group-hover:text-white/60 transition-colors">記住我</span>
                           </label>
-                          <button className="text-xs font-bold text-primary hover:text-accent transition-colors">忘記密碼？</button>
+                          <button type="button" className="text-xs font-bold text-primary hover:text-accent transition-colors">忘記密碼？</button>
                       </div>
+
+                      {/* Real-time Log Message */}
+                      <AnimatePresence>
+                        {log && (
+                           <motion.div 
+                             initial={{ opacity: 0, y: -10 }} 
+                             animate={{ opacity: 1, y: 0 }}
+                             exit={{ opacity: 0, scale: 0.95 }}
+                             className={cn(
+                               "p-4 rounded-2xl text-[10px] font-black uppercase tracking-widest border flex items-center gap-3",
+                               log.type === 'error' ? "bg-red-500/10 border-red-500/20 text-red-500" : "bg-primary/10 border-primary/20 text-primary"
+                             )}
+                           >
+                             <div className={cn("w-2 h-2 rounded-full", log.type === 'error' ? "bg-red-500" : "bg-primary animate-pulse")} />
+                             {log.msg}
+                           </motion.div>
+                        )}
+                      </AnimatePresence>
+
                       <button 
                         type="submit"
-                        className="w-full py-6 bg-primary/20 border border-primary/30 text-primary font-black rounded-3xl flex items-center justify-center gap-3 hover:bg-primary hover:text-white transition-all uppercase tracking-widest"
+                        disabled={isLoggingIn}
+                        className="w-full py-6 bg-primary/20 border border-primary/30 text-primary font-black rounded-3xl flex items-center justify-center gap-3 hover:bg-primary hover:text-white transition-all uppercase tracking-widest disabled:opacity-50"
                       >
-                          <span>帳號密碼登入</span>
-                          <ArrowRight size={20} />
+                          {isLoggingIn ? (
+                             <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                          ) : (
+                            <>
+                              <span>帳號密碼登入</span>
+                              <ArrowRight size={20} />
+                            </>
+                          )}
                       </button>
                    </form>
                 </div>
