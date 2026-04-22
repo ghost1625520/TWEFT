@@ -12,9 +12,10 @@ export async function middleware(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  // Safety Guard: If environment variables are missing, don't crash
-  if (!supabaseUrl || !supabaseKey) {
-    return response;
+  // STRICT CHECK: Redirect to a config-error page or just block if critical
+  if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('/rest/v1')) {
+    console.error('CRITICAL: Supabase environment variables are missing or misconfigured.');
+    return response; 
   }
 
   const supabase = createServerClient(
@@ -40,10 +41,8 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // This will refresh the session if it is expired
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Refresh session
+  const { data: { user } } = await supabase.auth.getUser();
 
   const isAuthPage = request.nextUrl.pathname.startsWith('/portal/dashboard') || 
                      request.nextUrl.pathname.startsWith('/admin');

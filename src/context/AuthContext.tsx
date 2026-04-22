@@ -92,21 +92,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithEmail = async (email: string, password: string) => {
     console.group('🔐 Supabase Auth Debug');
     console.log('Target Email:', email);
-    console.log('Client Config URL:', supabase['supabaseUrl']?.substring(0, 15) + '...');
     
+    if (!supabase) {
+      console.error('Supabase client is not initialized. Please check your environment variables.');
+      console.groupEnd();
+      return { error: { message: '系統配置錯誤：Supabase 客戶端未初始化', status: 500 } };
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     
     if (error) {
-      console.error('Auth Error Received:', {
-        message: error.message,
-        status: error.status,
-        name: error.name,
-      });
-    } else {
-      console.log('Auth Success! User ID:', data.user?.id);
+      console.error('Auth Error Details:', error);
+      
+      // Translate common errors
+      let friendlyMessage = error.message;
+      if (error.message.includes('Invalid login credentials')) {
+        friendlyMessage = '帳號或密碼錯誤';
+      } else if (error.message.includes('Email not confirmed')) {
+        friendlyMessage = '電子郵件尚未驗證';
+      } else if (error.message.includes('Database error querying schema')) {
+        friendlyMessage = '資料庫連線異常 (Schema Error)，請聯繫管理員重啟 Supabase 專案';
+      }
+
+      console.groupEnd();
+      return { error: { ...error, message: friendlyMessage } };
     }
+
+    console.log('Auth Success! User ID:', data.user?.id);
     console.groupEnd();
-    return { error };
+    return { error: null };
   };
 
   const signOut = async () => {
