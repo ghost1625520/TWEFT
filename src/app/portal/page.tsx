@@ -141,6 +141,8 @@ export default function PortalPage() {
                         setIsLoggingIn(false);
                       } else {
                         setLog({ msg: '驗證成功，正在跳轉...', type: 'info' });
+                        // Force manual redirect to dashboard
+                        window.location.href = '/portal/dashboard';
                       }
                     }}
                     className="space-y-6"

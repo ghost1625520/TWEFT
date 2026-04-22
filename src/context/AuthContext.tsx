@@ -1,7 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase, UserProfile, UserRole } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/client';
+import { UserProfile, UserRole } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
 
 interface AuthContextType {
@@ -22,10 +23,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check active sessions and sets the user
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
     const setData = async () => {
       const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) throw error;
+      if (error) {
+        console.error('Session check error:', error);
+      }
       setUser(session?.user ?? null);
       if (session?.user) {
         await fetchProfile(session.user.id);
@@ -51,32 +58,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
+    if (!supabase) return;
 
-    if (error && error.code === 'PGRST116') {
-      // Profile doesn't exist, create a default one
-      const { data: newUser } = await supabase.auth.getUser();
-      if (newUser.user) {
-        const newProfile: UserProfile = {
+    try {
+      // Use upsert to handle both first-time creation and existing profiles
+      const { data: userData } = await supabase.auth.getUser();
+      const userMeta = userData.user?.user_metadata || {};
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .upsert({
           id: userId,
-          email: newUser.user.email!,
-          role: 'Guest',
-          full_name: newUser.user.user_metadata.full_name,
-          avatar_url: newUser.user.user_metadata.avatar_url,
-        };
-        const { data: createdProfile } = await supabase
-          .from('profiles')
-          .insert([newProfile])
-          .select()
-          .single();
-        setProfile(createdProfile);
-      }
-    } else {
+          email: userData.user?.email || '',
+          full_name: userMeta.full_name || userData.user?.email?.split('@')[0] || 'User',
+          avatar_url: userMeta.avatar_url || '',
+          // Preserve role if it already exists, otherwise default to Guest
+        }, { onConflict: 'id', ignoreDuplicates: false })
+        .select()
+        .single();
+
+      if (error) throw error;
       setProfile(data);
+    } catch (err: any) {
+      console.error('Profile sync error:', err.message);
+      
+      // Fallback: try to just read if upsert failed due to permissions
+      const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
+      if (data) setProfile(data);
     }
   };
 
