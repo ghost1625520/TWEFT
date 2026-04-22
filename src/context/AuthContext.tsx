@@ -90,7 +90,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithEmail = async (email: string, password: string) => {
+    console.group('🔐 Supabase Auth Debug');
+    console.log('Target Email:', email);
+    console.log('Client Config URL:', supabase['supabaseUrl']?.substring(0, 15) + '...');
+    
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    
+    if (error) {
+      console.error('Auth Error Received:', {
+        message: error.message,
+        status: error.status,
+        name: error.name,
+      });
+    } else {
+      console.log('Auth Success! User ID:', data.user?.id);
+    }
+    console.groupEnd();
     return { error };
   };
 

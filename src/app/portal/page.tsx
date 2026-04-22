@@ -130,10 +130,14 @@ export default function PortalPage() {
                       setLog({ msg: '正在驗證身分...', type: 'info' });
                       
                       const formattedEmail = email.includes('@') ? email : `${email}@tweft.org`;
+                      console.log('[Login] Attempting with:', formattedEmail);
+                      
                       const { error } = await signInWithEmail(formattedEmail, password);
                       
                       if (error) {
-                        setLog({ msg: `登入失敗: ${error.message}`, type: 'error' });
+                        console.error('[Login] Error detail:', error);
+                        const detail = error.status ? `(${error.status}) ${error.message}` : error.message;
+                        setLog({ msg: `登入失敗: ${detail}`.toUpperCase(), type: 'error' });
                         setIsLoggingIn(false);
                       } else {
                         setLog({ msg: '驗證成功，正在跳轉...', type: 'info' });
